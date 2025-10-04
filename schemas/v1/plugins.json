@@ -1,6 +1,6 @@
 {
-  "$schema": "https:
-  "$id": "https:
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://schemas.xflows.com/v1/plugins",
   "title": "XFlows Plugin System Schema v1",
   "description": "JSON Schema definitions for XFlows plugin system configuration and validation",
   "version": "1.0.0",
@@ -365,7 +365,7 @@
           "type": "string",
           "description": "Slack webhook URL",
           "format": "uri",
-          "pattern": "^https:
+          "pattern": "^https://hooks\\.slack\\.com/services/"
         },
         "channel": {
           "type": "string",
