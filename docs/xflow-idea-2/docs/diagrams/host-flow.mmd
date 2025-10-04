@@ -1,9 +1,0 @@
-```mermaid
-flowchart LR
-  A[Host] -->|load & validate| B[Flow JSON]
-  A -->|create| C[XState Machine]
-  C -->|state.meta.view| D[MFEs]
-  C -->|invoke/guards/actions| E[Services Registry]
-  D -->|events| A
-  E -->|results/assign| C
-```
