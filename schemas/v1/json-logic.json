@@ -530,68 +530,6 @@
     "ruleset": {"$ref": "#/definitions/businessRuleset"},
     "rule": {"$ref": "#/definitions/businessRule"},
     "expression": {"$ref": "#/definitions/jsonLogicExpression"}
-          ],
-      "required": ["name", "expression"]
-    },
-    
-    "businessRuleset": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Ruleset name"
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+\\.\\d+$"
-        },
-        "description": {
-          "type": "string"
-        },
-        "rules": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/businessRule"
-          }
-        },
-        "tags": {
-          "type": "array",
-          "items": {"type": "string"}
-        }
-      },
-      "required": ["name", "version", "rules"]
-    },
-    
-    "variableDefinition": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_.]+$"
-        },
-        "type": {
-          "type": "string",
-          "enum": ["string", "number", "boolean", "array", "object"]
-        },
-        "description": {"type": "string"},
-        "scope": {
-          "type": "string",
-          "enum": ["global", "context", "local"]
-        },
-        "defaultValue": {},
-        "validation": {
-          "$ref": "#/definitions/value"
-        }
-      },
-      "required": ["name", "type"]
-    }
-  },
-  
-  "type": "object",
-  "properties": {
-    "ruleset": {"$ref": "#/definitions/businessRuleset"},
-    "rule": {"$ref": "#/definitions/businessRule"},
-    "expression": {"$ref": "#/definitions/jsonLogicExpression"}
   },
   "additionalProperties": false
 }
