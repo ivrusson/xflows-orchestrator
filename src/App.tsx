@@ -3,10 +3,11 @@ import { FlowOrchestrator } from './approaches/approach-1/components/FlowOrchest
 import { SimpleFlowOrchestrator } from './approaches/approach-2/components/SimpleFlowOrchestrator';
 import { ValidationDemo } from './core/demo/ValidationDemo';
 import { TestingHelper } from './components/TestingHelper';
+import { PluginDemo } from './core/demo/PluginDemo';
 
 function App() {
   const [selectedApproach, setSelectedApproach] = useState<
-    'overview' | 'approach-1' | 'approach-2' | 'validation' | 'testing-mode'
+    'overview' | 'approach-1' | 'approach-2' | 'validation' | 'testing-mode' | 'plugins'
   >('overview');
   
   const [showDebugPanel, setShowDebugPanel] = useState(false);
@@ -478,6 +479,17 @@ function App() {
               </button>
               <button
                 type="button"
+                onClick={() => setSelectedApproach('plugins')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  selectedApproach === 'plugins'
+                    ? 'bg-purple-600 text-white'
+                    : 'text-purple-600 hover:text-purple-700'
+                }`}
+              >
+                🔌 Plugin System
+              </button>
+              <button
+                type="button"
                 onClick={() => setSelectedApproach('approach-1')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
                   selectedApproach === 'approach-1'
@@ -531,6 +543,11 @@ function App() {
         {selectedApproach === 'validation' && (
           <div className="container mx-auto px-4 py-8">
             <ValidationDemo />
+          </div>
+        )}
+        {selectedApproach === 'plugins' && (
+          <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 py-8">
+            <PluginDemo />
           </div>
         )}
       </main>
