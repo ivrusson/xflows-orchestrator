@@ -1,0 +1,563 @@
+{
+  "$schema": "https:
+  "$id": "https:
+  "title": "XFlows Plugin System Schema v1",
+  "description": "JSON Schema definitions for XFlows plugin system configuration and validation",
+  "version": "1.0.0",
+  "author": "XFlows Development Team",
+  "lastUpdated": "2024-12-19T15:00:00Z",
+  
+  "definitions": {
+    "pluginMetadata": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the plugin",
+          "pattern": "^[a-z0-9-_]+$",
+          "minLength": 3,
+          "maxLength": 50
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name of the plugin",
+          "minLength": 3,
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of plugin functionality",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of the plugin",
+          "pattern": "^\\d+\\.\\d+\\.\\d+"
+        },
+        "author": {
+          "type": "string",
+          "description": "Plugin author or organization",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": ["actor", "ui", "tool", "guard", "action"],
+          "description": "Plugin category classification"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "description": "SEO and categorization tags",
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "dependencies": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z0-9-_]+$": {
+              "type": "string"
+            }
+          },
+          "description": "Plugin dependencies and versions"
+          }
+      },
+      "required": ["id", "name", "description", "version", "author", "category", "tags"]
+    },
+    
+    "pluginConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Reference to plugin ID"
+        },
+        "config": {
+          "type": "object",
+          "description": "Plugin-specific configuration"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether plugin is enabled",
+          "default": true
+        }
+      },
+      "required": ["id", "config"]
+  },
+  
+  "awsS3Config": {
+      "type": "object",
+      "properties": {
+        "bucket": {
+          "type": "string",
+          "description": "S3 bucket name",
+          "pattern": "^[a-z0-9.-]+$",
+          "minLength": 3,
+          "maxLength": 63
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS region",
+          "default": "us-east-1",
+          "enum": [
+            "us-east-1", "us-west-1", "us-west-2", "eu-west-1", 
+            "eu-central-1", "ap-southeast-1", "ap-northeast-1"
+          ]
+        },
+        "accessKeyId": {
+          "type": "string",
+          "description": "AWS Access Key ID",
+          "pattern": "^AKIA[0-9A-Z]{16}$"
+        },
+        "secretAccessKey": {
+          "type": "string",
+          "description": "AWS Secret Access Key",
+          "minLength": 40
+        },
+        "keyTemplate": {
+          "type": "string",
+          "description": "File key template with variable substitution",
+          "default": "uploads/{{timestamp}}/{{filename}}",
+          "pattern": "^[^/].*[^/]$"
+        },
+        "maxFileSize": {
+          "type": "number",
+          "description": "Maximum file size in bytes",
+          "default": 10485760,
+          "minimum": 1024,
+          "maximum": 5368709120
+        },
+        "allowedExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\.[a-zA-Z0-9]+$"
+          },
+          "description": "Allowed file extensions",
+          "default": [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".doc", ".docx"]
+        }
+      },
+      "required": ["bucket", "accessKeyId", "secretAccessKey"]
+    },
+    
+    "awsCloudWatchConfig": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "default": "us-east-1"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "CloudWatch namespace",
+          "pattern": "^[A-Za-z0-9/_-]+$",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "timeRange": {
+          "type": "object",
+          "properties": {
+            "start": {
+              "type": "string",
+              "description": "Start time (ISO string or relative)",
+              "pattern": "^(now|-[0-9]+[dmh])$"
+            },
+            "end": {
+              "type": "string",
+              "description": "End time",
+              "default": "now"
+            },
+            "period": {
+              "type": "number",
+              "description": "Period in seconds",
+              "default": 3600,
+              "minimum": 60,
+              "maximum": 86400
+            }
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "dimension": {
+                "type": "string",
+                "description": "Dimension name"
+              },
+              "statistic": {
+                "type": "string",
+                "enum": ["Average", "Maximum", "Minimum", "Sum", "SampleCount"],
+                "default": "Average"
+              }
+            },
+            "required": ["name"]
+          },
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": ["namespace"]
+    },
+    
+    "awsSESConfig": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "default": "us-east-1"
+        },
+          "fromEmail": {
+          "type": "string",
+          "description": "Sender email address",
+          "format": "email"
+        },
+        "toEmails": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "email"
+          },
+          "description": "Recipient email addresses",
+          "minItems": 1,
+          "maxItems": 50
+        },
+        "subject": {
+          "type": "string",
+          "description": "Email subject line",
+          "minLength": 1,
+          "maxLength": 998
+        },
+        "template": {
+          "type": "string",
+          "description": "Email template content",
+          "minLength": 1
+        },
+        "templateId": {
+          "type": "string",
+          "description": "SendGrid or SES template ID",
+          "pattern": "^[a-zA-Z0-9-_]+$"
+        },
+        "dynamicTemplateData": {
+          "type": "object",
+          "description": "Template variables",
+          "patternProperties": {
+            "^[a-zA-Z0-9_]+$": {}
+          }
+        }
+      },
+      "required": ["fromEmail", "toEmails", "subject"]
+    },
+    
+    
+    "googleAnalyticsConfig": {
+      "type": "object",
+      "properties": {
+        "propertyId": {
+          "type": "string",
+          "description": "GA4 Property ID",
+          "pattern": "^GA-[0-9]+$"
+        },
+        "measurementId": {
+          "type": "string", 
+          "description": "GA4 Measurement ID",
+          "pattern": "^G-[A-Z0-9]+$"
+        },
+        "eventName": {
+          "type": "string",
+          "description": "Event name to track",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "eventParameters": {
+          "type": "object",
+          "description": "Custom event parameters",
+          "patternProperties": {
+            "^[a-zA-Z0-9_]+$": {
+              "anyOf": [
+                {"type": "string"},
+                {"type": "number"},
+                {"type": "boolean"}
+              ]
+            }
+          }
+        },
+        "userId": {
+          "type": "string",
+          "description": "User identifier"
+        },
+        "sessionId": {
+          "type": "string",
+          "description": "Session identifier"
+        }
+      },
+      "required": ["propertyId", "eventName"]
+    },
+    
+    "googleSheetsConfig": {
+      "type": "object",
+      "properties": {
+        "spreadsheetId": {
+          "type": "string",
+          "description": "Google Sheets document ID",
+          "pattern": "^[a-zA-Z0-9-_]+$"
+        },
+        "range": {
+          "type": "string",
+          "description": "Cell range reference",
+          "pattern": "^[A-Z]+[0-9]+:[A-Z]+[0-9]+$",
+          "default": "A1:Z1000"
+        },
+        "editable": {
+          "type": "boolean",
+          "description": "Allow editing",
+          "default": true
+        },
+        "filters": {
+          "type": "boolean",
+          "description": "Enable column filters",
+          "default": true
+        },
+        "formulas": {
+          "type": "boolean",
+          "description": "Enable formula support",
+          "default": true
+        },
+        "columnTypes": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z]+$": {
+              "type": "string",
+              "enum": ["text", "number", "date", "currency", "percentage"]
+            }
+          }
+        },
+        "validationRules": {
+          "type": "object",
+          "description": "Column validation rules",
+          "patternProperties": {
+            "^[a-zA-Z0-9_]+$": {
+              "anyOf": [
+                {"type": "string"},
+                {"type": "object"}
+              ]
+            }
+          }
+        }
+      },
+      "required": ["spreadsheetId"]
+    },
+    
+    
+    "slackConfig": {
+      "type": "object",
+      "properties": {
+        "webhookUrl": {
+          "type": "string",
+          "description": "Slack webhook URL",
+          "format": "uri",
+          "pattern": "^https:
+        },
+        "channel": {
+          "type": "string",
+          "description": "Slack channel name",
+          "pattern": "^#[a-zA-Z0-9-_]+$"
+        },
+        "username": {
+          "type": "string",
+          "description": "Bot username",
+          "default": "XFlows Bot",
+          "maxLength": 81
+        },
+        "iconEmoji": {
+          "type": "string",
+          "description": "Bot icon emoji",
+          "pattern": "^:[a-zA-Z0-9_-]+:$",
+          "default": ":robot_face:"
+        },
+        "blocks": {
+          "type": "array",
+          "description": "Slack Block Kit blocks",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["section", "actions", "divider", "header"]
+              }
+            }
+          }
+        }
+      },
+      "required": ["webhookUrl", "channel"]
+    },
+    
+    "sendGridConfig": {
+      "type": "object",
+      "properties": {
+        "apiKey": {
+          "type": "string",
+          "description": "SendGrid API Key",
+          "pattern": "^SG\\.[a-zA-Z0-9-_]+\\.([a-zA-Z0-9-_]+)$"
+        },
+        "fromEmail": {
+          "type": "string",
+          "description": "Sender email",
+          "format": "email"
+        },
+        "fromName": {
+          "type": "string",
+          "description": "Sender name",
+          "maxLength": 100
+        },
+        "templateId": {
+          "type": "string",
+          "description": "SendGrid template ID",
+          "pattern": "^d-[a-zA-Z0-9]{25}$"
+        },
+        "dynamicTemplateData": {
+          "type": "object",
+          "description": "Template variables",
+          "patternProperties": {
+            "^[a-zA-Z0-9_]+$": {}
+          }
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "default": "application/octet-stream"
+              }
+            },
+            "required": ["filename"]
+          }
+        }
+      },
+      "required": ["apiKey", "fromEmail"]
+    },
+    
+    "mysqlConfig": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": "Database host",
+          "format": "hostname"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Database port",
+          "default": 3306,
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "database": {
+          "type": "string",
+          "description": "Database name",
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "username": {
+          "type": "string",
+          "description": "Database username",
+          "minLength": 1
+        },
+        "password": {
+          "type": "string",
+          "description": "Database password",
+          "minLength": 1
+        },
+        "query": {
+          "type": "string",
+          "description": "SQL query to execute",
+          "minLength": 1
+        },
+        "operation": {
+          "type": "string",
+          "enum": ["SELECT", "INSERT", "UPDATE", "DELETE"],
+          "description": "SQL operation type"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Query parameters"
+        },
+        "connectionPool": {
+          "type": "object",
+          "properties": {
+            "max": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "min": {
+              "type": "integer", 
+              "default": 2,
+              "minimum": 1,
+              "maximum": 50
+            },
+            "idle": {
+              "type": "integer",
+              "description": "Idle timeout in ms",
+              "default": 10000,
+              "minimum": 1000
+            }
+          }
+        }
+      },
+      "required": ["host", "database", "username", "password", "query"]
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "pluginMetadata": {
+      "$ref": "#/definitions/pluginMetadata"
+    },
+    "pluginConfig": {
+      "$ref": "#/definitions/pluginConfig"
+    },
+    "awsS3Config": {
+      "$ref": "#/definitions/awsS3Config"
+    },
+    "awsCloudWatchConfig": {
+      "$ref": "#/definitions/awsCloudWatchConfig"  
+    },
+    "awsSESConfig": {
+      "$ref": "#/definitions/awsSESConfig"
+    },
+    "googleAnalyticsConfig": {
+      "$ref": "#/definitions/googleAnalyticsConfig"
+    },
+    "googleSheetsConfig": {
+      "$ref": "#/definitions/googleSheetsConfig"
+    },
+    "slackConfig": {
+      "$ref": "#/definitions/slackConfig"
+    },
+    "sendGridConfig": {
+      "$ref": "#/definitions/sendGridConfig"
+    },
+    "sqlConfig": {
+      "$ref": "#/definitions/mysqlConfig"
+    }
+  },
+  "additionalProperties": false
+}

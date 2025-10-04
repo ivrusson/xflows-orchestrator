@@ -1,0 +1,597 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://schemas.xflows.com/v1/json-logic",
+  "title": "XFlows JSON Logic Configuration Schema v1",
+  "description": "JSON Schema for JSON Logic expressions and business rules in XFlows",
+  "version": "1.0.0",
+  "author": "XFlows Development Team",
+  "lastUpdated": "2024-12-19T16:00:00Z",
+  
+  "definitions": {
+    "jsonLogicExpression": {
+      "type": "object",
+      "description": "Root JSON Logic expression",
+      "anyOf": [
+        {"$ref": "#/definitions/binaryOperator"},
+        {"$ref": "#/definitions/unaryOperator"},
+        {"$ref": "#/definitions/variable"},
+        {"$ref": "#/definitions/value"},
+        {"$ref": "#/definitions/logicalOperator"},
+        {"$ref": "#/definitions/comparisonOperator"},
+        {"$ref": "#/definitions/arithmeticOperator"},
+        {"$ref": "#/definitions/stringOperator"},
+        {"$ref": "#/definitions/arrayOperator"}
+      ]
+    },
+    
+    "binaryOperator": {
+      "type": "object",
+      "properties": {
+        "and": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 100
+        },
+        "or": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 100
+        },
+        "+": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2
+        },
+        "-": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "*": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2
+        },
+        "/": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "==": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "!==": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "<": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "<=": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        ">": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        ">=": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "in": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "unaryOperator": {
+      "type": "object",
+      "properties": {
+        "!": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "!!": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "!!": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "abs": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "not": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "log": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "ln": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "sqrt": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "ceil": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "floor": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "round": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "variable": {
+      "type": "object",
+      "properties": {
+        "var": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "array", "items": {"type": "string"}}
+          ],
+          "docs": "Variable path (e.g., 'user.age' or ['user', 'age'])"
+        }
+      },
+      "required": ["var"],
+      "additionalProperties": false
+    },
+    
+    "value": {
+      "anyOf": [
+        {"type": "string"},
+        {"type": "number"},
+        {"type": "boolean"},
+        {"type": "null"},
+        {"type": "array"},
+        {"type": "object"}
+      ],
+      "description": "Literal value"
+    },
+    
+    "logicalOperator": {
+      "type": "object",
+      "properties": {
+        "and": {"$ref": "#/definitions/logicalOperatorArray"},
+        "or": {"$ref": "#/definitions/logicalOperatorArray"},
+        "not": {"$ref": "#/definitions/jsonLogicExpression"}
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "logicalOperatorArray": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/jsonLogicExpression"},
+      "minItems": 1,
+      "maxItems": 100
+    },
+    
+    "comparisonOperator": {
+      "type": "object",
+      "properties": {
+        "==": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "!=": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "<": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "<=": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        ">": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        ">=": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "between": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "arithmeticOperator": {
+      "type": "object",
+      "properties": {
+        "+": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        },
+        "-": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1,
+          "maxItems": 2
+        },
+        "*": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        },
+        "/": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "%": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "**": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "max": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        },
+        "min": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "stringOperator": {
+      "type": "object",
+      "properties": {
+        "cat": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        },
+        "substr": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2,
+          "maxItems": 3
+        },
+        "if": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 2
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "arrayOperator": {
+      "type": "object",
+      "properties": {
+        "map": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Expression to map over array items"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Array to map over"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "reduce": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Reduce expression"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Initial value"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Array to reduce"
+            }
+          ],
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "filter": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Filter expression"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Array to filter"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "all": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Condition to check"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Array to check"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "some": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Condition to check"
+            },
+            {
+              "$ref": "#/definitions/jsonLogicExpression",
+              "description": "Array to check"
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "merge": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/jsonLogicExpression"},
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1
+    },
+    
+    "businessRule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique rule identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable rule name",
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Rule description",
+          "maxLength": 500
+        },
+        "category": {
+          "type": "string",
+          "enum": ["validation", "guard", "calculation", "ui", "business"],
+          "description": "Rule category"
+        },
+        "expression": {
+          "$ref": "#/definitions/jsonLogicExpression"
+        },
+        "context": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Required context variables"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "description": {"type": "string"},
+              "context": {"type": "object"},
+              "expected": {"type": "boolean"}
+            }
+          }
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": ["id", "name", "expression"]
+    },
+    
+    "businessRuleset": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Ruleset name"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/businessRule"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "required": ["name", "version", "rules"]
+    },
+    
+    "variableDefinition": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_.]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "array", "object"]
+        },
+        "description": {"type": "string"},
+        "scope": {
+          "type": "string",
+          "enum": ["global", "context", "local"]
+        },
+        "defaultValue": {},
+        "validation": {
+          "$ref": "#/definitions/value"
+        }
+      },
+      "required": ["name", "type"]
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "ruleset": {"$ref": "#/definitions/businessRuleset"},
+    "rule": {"$ref": "#/definitions/businessRule"},
+    "expression": {"$ref": "#/definitions/jsonLogicExpression"}
+          ],
+      "required": ["name", "expression"]
+    },
+    
+    "businessRuleset": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Ruleset name"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/businessRule"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "required": ["name", "version", "rules"]
+    },
+    
+    "variableDefinition": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_.]+$"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "array", "object"]
+        },
+        "description": {"type": "string"},
+        "scope": {
+          "type": "string",
+          "enum": ["global", "context", "local"]
+        },
+        "defaultValue": {},
+        "validation": {
+          "$ref": "#/definitions/value"
+        }
+      },
+      "required": ["name", "type"]
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "ruleset": {"$ref": "#/definitions/businessRuleset"},
+    "rule": {"$ref": "#/definitions/businessRule"},
+    "expression": {"$ref": "#/definitions/jsonLogicExpression"}
+  },
+  "additionalProperties": false
+}

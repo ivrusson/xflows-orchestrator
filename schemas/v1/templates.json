@@ -1,0 +1,388 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://schemas.xflows.com/v1/templates",
+  "title": "XFlows Template Schema v1", 
+  "description": "JSON Schema for EJS templates and dynamic content generation",
+  "version": "1.0.0",
+  "author": "XFlows Development Team",
+  "lastUpdated": "2024-12-19T16:30:00Z",
+  
+  "definitions": {
+    "templateConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique template identifier",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "minLength": 3,
+          "maxLength": 50
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable template name",
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Template description",
+          "maxLength": 500
+        },
+        "type": {
+          "type": "string",
+          "enum": ["ejs", "handlebars", "mustache", "custom"],
+          "default": "ejs",
+          "description": "Template engine type"
+        },
+        "content": {
+          "type": "string",
+          "description": "Template content",
+          "minLength": 1
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+          },
+          "description": "Required template variables",
+          "uniqueItems": true
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+          },
+          "description": "Available template filters"
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$"
+          },
+          "description": "Available template functions"
+        },
+        "outputs": {
+          "$ref": "#/definitions/templateOutputs"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/templateExample"
+          }
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "required": ["id", "name", "type", "content"]
+    },
+    
+    "templateOutputs": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "type": "string",
+          "enum": ["html", "text", "json", "xml", "csv"],
+          "default": "text"
+        },
+        "contentType": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_/-]*;?[\\s\\S]*$",
+          "default": "text/plain"
+        },
+        "encoding": {
+          "type": "string",
+          "enum": ["utf-8", "ascii", "latin1"],
+          "default": "utf-8"
+        },
+        "examples": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Expected output examples"
+        }
+      }
+    },
+    
+    "templateExample": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Example title",
+          "maxLength": 100
+        },
+        "description": {
+          "type": "string",
+          "description": "Example description",
+          "maxLength": 500
+        },
+        "input": {
+          "type": "object",
+          "description": "Sample input context",
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9_]*$": {}
+          }
+        },
+        "output": {
+          "type": "string",
+          "description": "Expected output"
+        }
+      },
+      "required": ["title", "input", "output"]
+    },
+    
+    "templateFilter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "description": "Filter name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Filter description",
+          "maxLength": 200
+        },
+        "category": {
+          "type": "string",
+          "enum": ["string", "number", "date", "currency", "format"],
+          "description": "Filter category"
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter parameters"
+        },
+        "function": {
+          "type": "string",
+          "description": "Filter implementation function name"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "input": {"type": "string"},
+              "parameters": {"type": "array"},
+              "output": {"type": "string"}
+            }
+          }
+        }
+      },
+      "required": ["name", "description", "parameters"]
+    },
+    
+    "templateFunction": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "description": "Function name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Function description",
+          "maxLength": 200
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/functionParameter"
+          },
+          "minItems": 0
+        },
+        "returnType": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "object", "array"],
+          "description": "Function return type"
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Function implementation key"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "inputs": {"type": "array"},
+              "output": {}
+            }
+          }
+        }
+      },
+      "required": ["name", "description", "parameters", "returnType"]
+    },
+    
+    "functionParameter": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+          "description": "Parameter name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "object", "array"],
+          "description": "Parameter type"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether parameter is required"
+        },
+        "description": {
+          "type": "string",
+          "description": "Parameter description"
+        },
+        "defaultValue": {},
+        "validation": {
+          "type": "object",
+          "description": "Parameter validation rules"
+        }
+      },
+      "required": ["name", "type", "required"]
+    },
+    
+    "businessTemplate": {
+      "type": "object",
+      "properties": {
+        "id": {"$ref": "#/definitions/templateConfig/properties/id"},
+        "name": {"$ref": "#/definitions/templateConfig/properties/name"},
+        "description": {"$ref": "#/definitions/templateConfig/properties/description"},
+        "category": {
+          "type": "string",
+          "enum": ["email", "notification", "document", "message", "report"],
+          "description": "Business template category"
+        },
+        "businessRules": {
+          "type": "array",
+          "items": {
+            "type": "object", 
+            "properties": {
+              "rule": {"type": "string"},
+              "condition": {"type": "object"},
+              "fallback": {"type": "string"}
+            }
+          },
+          "description": "Business-specific template rules"
+        },
+        "template": {"$ref": "#/definitions/templateConfig"},
+        "contextSchema": {
+          "type": "object",
+          "description": "Expected context structure"
+        },
+        "variants": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z][a-zA-Z0-9_]*$": {
+              "$ref": "#/definitions/templateConfig"
+            }
+          },
+          "description": "Template variants by context"
+        }
+      },
+      "required": ["id", "name", "category", "template"]
+    },
+    
+    "emailTemplate": {
+      "allOf": [
+        {"$ref": "#/definitions/businessTemplate"},
+        {
+          "properties": {
+            "subject": {
+              "type": "string",
+              "description": "Email subject template",
+              "maxLength": 200
+            },
+            "headers": {
+              "type": "object",
+              "description": "Email headers"
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "filename": {"type": "string"},
+                  "template": {"type": "string"},
+                  "inline": {"type": "boolean"}
+                }
+              }
+            },
+            "styles": {
+              "type": "object",
+              "description": "Inline CSS styles"
+            },
+            "responsive": {
+              "type": "boolean",
+              "description": "Enable responsive design",
+              "default": true
+            }
+          }
+        }
+      ]
+    },
+    
+    "documentTemplate": {
+      "allOf": [
+        {"$ref": "#/definitions/businessTemplate"},
+        {
+          "properties": {
+            "format": {
+              "type": "string",
+              "enum": ["pdf", "html", "xml", "csv"],
+              "default": "pdf"
+            },
+            "layout": {
+              "type": "string",
+              "description": "Document layout identifier"
+            },
+            "pageSize": {
+              "type": "string",
+              "enum": ["A4", "A3", "letter", "legal"],
+              "default": "A4"
+            },
+            "orientation": {
+              "type": "string",
+              "enum": ["portrait", "landscape"],
+              "default": "portrait"
+            },
+            "fonts": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Available fonts"
+            },
+            "watermark": {
+              "type": "object",
+              "properties": {
+                "text": {"type": "string"},
+                "opacity": {"type": "number", "minimum": 0, "maximum": 1}
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "template": {"$ref": "#/definitions/templateConfig"},
+    "businessTemplate": {"$ref": "#/definitions/businessTemplate"},
+    "emailTemplate": {"$ref": "#/definitions/emailTemplate"},
+    "documentTemplate": {"$ref": "#/definitions/documentTemplate"},
+    "filter": {"$ref": "#/definitions/templateFilter"},
+    "function": {"$ref": "#/definitions/templateFunction"}
+  },
+  "additionalProperties": false
+}

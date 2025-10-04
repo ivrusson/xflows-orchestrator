@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "https://schemas.xflows.com/v1/flows", 
+  "title": "XFlows Flow Configuration Schema v1",
+  "description": "JSON Schema for XFlows flow configuration and state machine definitions",
+  "version": "1.0.0",
+  "author": "XFlows Development Team",
+  "lastUpdated": "2024-12-19T15:30:00Z",
+  
+  "definitions": {
+    "flowConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the flow",
+          "pattern": "^[a-z0-9-_]+$",
+          "minLength": 3,
+          "maxLength": 50
+        },
+        "initial": {
+          "type": "string",
+          "description": "Initial state of the flow"
+        },
+        "context": {
+          "type": "object",
+          "description": "Initial context data",
+          "patternProperties": {
+            "^[a-zA-Z0-9_]+$": {}
+          }
+        },
+        "states": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z0-9.-_]+$": {
+              "$ref": "#/definitions/stateConfig"
+            }
+          }
+        },
+        "plugins": {
+          "type": "object",
+          "properties": {
+            "actors": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                  "$ref": "#/definitions/pluginConfig"
+                }
+              }
+            },
+            "tools": {
+              "type": "object", 
+              "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                  "$ref": "#/definitions/pluginConfig"
+                }
+              }
+            },
+            "guards": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                  "$ref": "#/definitions/pluginConfig"
+                }
+              }
+            },
+            "actions": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                  "$ref": "#/definitions/pluginConfig"
+                }
+              }
+            },
+            "ui": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-zA-Z0-9_]+$": {
+                  "$ref": "#/definitions/pluginConfig"
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["id", "initial", "context", "states"]
+    },
+    
+    "stateConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["final", "compound", "atomic"],
+          "default": "atomic"
+        },
+        "meta": {
+          "type": "object",
+          "properties": {
+            "view": {
+              "type": "object",
+              "properties": {
+                "moduleId": {
+                  "type": "string",
+                  "description": "Module identifier for UI rendering"
+                },
+                "component": {
+                  "type": "string",
+                  "description": "Specific component to render"
+                },
+                "slot": {
+                  "type": "string",
+                  "description": "Render slot identifier"
+                },
+                "plugin": {
+                  "type": "string",
+                  "description": "Plugin ID for dynamic rendering"
+                },
+                "pluginConfig": {
+                  "type": "object",
+                  "description": "Plugin-specific configuration"
+                }
+              },
+              "required": ["moduleId"]
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable state description",
+              "maxLength": 200
+            },
+            "icon": {
+              "type": "string",
+              "description": "Icon identifier or emoji",
+              "maxLength": 10
+            }
+          }
+        },
+        "pluginInvoke": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pluginInvoke"
+          },
+          "description": "Plugin-based asynchronous operations"
+        },
+        "pluginUI": {
+          "$ref": "#/definitions/pluginUI"
+        },
+        "pluginActions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/pluginAction"
+          },
+          "description": "Plugin-based actions to execute"
+        },
+        "on": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z0-9_.]+$": {
+              "$ref": "#/definitions/transition"
+            }
+          },
+          "description": "State transitions and event handlers"
+        }
+      }
+    },
+    
+    "pluginConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Plugin identifier"
+        },
+        "config": {
+          "type": "object",
+          "description": "Plugin-specific configuration"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether plugin is enabled",
+          "default": true
+        }
+      },
+      "required": ["id", "config"]
+    },
+    
+    "pluginInvoke": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique invoke identifier"
+        },
+        "pluginId": {
+          "type": "string",
+          "description": "Plugin ID to invoke"
+        },
+        "pluginType": {
+          "type": "string",
+          "enum": ["actor", "tool"],
+          "description": "Type of plugin to invoke"
+        },
+        "config": {
+          "type": "object",
+          "description": "Plugin-specific configuration"
+        },
+        "timeout": {
+          "type": "number",
+          "description": "Timeout in milliseconds",
+          "default": 30000,
+          "minimum": 1000,
+          "maximum": 300000
+        },
+        "retryPolicy": {
+          "type": "object",
+          "properties": {
+            "attempts": {
+              "type": "integer",
+              "description": "Number of retry attempts",
+              "default": 3,
+              "minimum": 0,
+              "maximum": 10
+            },
+            "retryDelay": {
+              "type": "number",
+              "description": "Delay between retries in milliseconds",
+              "default": 1000,
+              "minimum": 100,
+              "maximum": 10000
+            },
+            "backoff": {
+              "type": "string",
+              "enum": ["linear", "exponential"],
+              "description": "Retry backoff strategy",
+              "default": "linear"
+            }
+          }
+        }
+      },
+      "required": ["id", "pluginId", "pluginType", "config"]
+    },
+    
+    "pluginUI": {
+      "type": "object",
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "description": "UI plugin identifier"
+        },
+        "config": {
+          "type": "object",
+          "description": "Plugin-specific UI configuration"
+        },
+        "slot": {
+          "type": "string",
+          "description": "UI slot identifier"
+        },
+        "responsive": {
+          "type": "boolean",
+          "description": "Enable responsive UI",
+          "default": true
+        }
+      },
+      "required": ["pluginId", "config"]
+    },
+    
+    "pluginAction": {
+      "type": "object", 
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "description": "Action identifier" 
+        },
+        "pluginId": {
+          "type": "string",
+          "description": "Plugin identifier"
+        },
+        "config": {
+          "type": "object",
+          "description": "Action-specific configuration"
+        },
+        "condition": {
+          "type": "object",
+          "description": "Conditional logic for action execution"
+        }
+      },
+      "required": ["actionId", "pluginId", "config"]
+    },
+    
+    "transition": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "string",
+          "description": "Target state for transition"
+        },
+        "actions": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "array", "items": {"type": "string"}}
+          ],
+          "description": "Actions to execute on transition"
+        },
+        "guard": {
+          "anyOf": [
+            {"type": "string"},
+            {"type": "object"}
+          ],
+          "description": "Guard condition for transition"
+        }
+      }
+    }
+  },
+  
+  "type": "object",
+  "properties": {
+    "flowConfig": {
+      "$ref": "#/definitions/flowConfig"
+    },
+    "stateConfig": {
+      "$ref": "#/definitions/stateConfig"
+    }
+  },
+  "additionalProperties": false
+}
