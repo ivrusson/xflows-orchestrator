@@ -1,0 +1,25 @@
+# Bun configuration file
+[cache]
+# Cache directory for dependencies
+dir = ".bun/cache"
+
+[install]
+# Registry URL (same as .npmrc for consistency)
+registry = "https://registry.npmjs.org/"
+
+# Always install exact versions
+exact = true
+
+# Don't install devDependencies on production builds
+production = false
+
+[run]
+# Use Bun's built-in bundler for better performance
+shell = "/bin/bash"
+
+# Debug mode settings
+debug = false
+
+[test]
+# Use Bun's test runner
+force = true
