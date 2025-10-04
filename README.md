@@ -60,6 +60,46 @@
 - ✅ **Debugging avanzado** con visual logging y state inspection
 - ✅ **Testing integrado** con escenarios predefinidos
 
+### 🔌 **Sistema de Plugins Extensible**
+
+El sistema de plugins revoluciona la arquitectura permitiendo extensibilidad infinita:
+
+- ✅ **Arquitectura Modular** - Plugins categorizados: Actors, UI, Tools, Guards, Actions
+- ✅ **Integración Enterprise** - AWS (S3, CloudWatch, SES), Google (Analytics, Sheets), Slack
+- ✅ **Terceros Compatibles** - SendGrid, MySQL, MapBox, Microsoft Azure
+- ✅ **Carga Dinámica** - Descubrimiento y instalación de plugins en runtime
+- ✅ **Type-Safe** - Soporte completo de TypeScript con validación de esquemas
+- ✅ **Zero-Code Integration** - Integrar servicios sin tocar código core
+- ✅ **Plugin Demo Interactivo** - Interface completa para testear y gestionar plugins
+
+```typescript
+// Ejemplo: Integración con AWS S3
+const enhancedMachine = createPluginEnhancedMachine({
+  plugins: {
+    tools: {
+      'document-uploader': {
+        id: 'aws-s3-upload',
+        config: {
+          bucket: 'insurance-documents',
+          keyTemplate: 'policies/{{dossierId}}/{{filename}}'
+        },
+        enabled: true
+      }
+    },
+    ui: {
+      'metrics-dashboard': {
+        id: 'aws-cloudwatch',
+        config: {
+          namespace: 'Insurance/Processing',
+          metrics: ['DocumentUploadTime', 'ProcessingRate']
+        },
+        enabled: true
+      }
+    }
+  }
+});
+```
+
 ---
 
 ## 🏆 Approaches
