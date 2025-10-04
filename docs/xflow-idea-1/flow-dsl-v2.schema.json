@@ -1,0 +1,672 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nn.com/schemas/flow-dsl-v2.json",
+  "title": "NN Sales Funnel Flow DSL v2.0",
+  "description": "Declarative flow definition with XState orchestration, interstep actions, json-logic guards, and dynamic navigation",
+  "type": "object",
+  "required": ["id", "name", "version", "steps"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{4,}$",
+      "description": "Unique flow identifier (product code)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable flow name"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version (major.minor.patch)"
+    },
+    "productType": {
+      "type": "string",
+      "enum": ["vida", "salud", "auto", "hogar", "empresa"],
+      "description": "Product category"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "estimatedTime": {
+          "type": "string",
+          "description": "Estimated completion time (e.g., '15-20 minutos')"
+        },
+        "requiresUnderwriting": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "initialContext": {
+      "type": "object",
+      "description": "Initial state machine context",
+      "properties": {
+        "dossierId": {
+          "type": ["string", "null"]
+        },
+        "productType": {
+          "type": "string"
+        },
+        "currentStep": {
+          "type": ["string", "null"]
+        },
+        "completedSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Step"
+      }
+    },
+    "errorHandling": {
+      "$ref": "#/definitions/ErrorHandling"
+    },
+    "signalr": {
+      "$ref": "#/definitions/SignalRConfig"
+    },
+    "persistence": {
+      "$ref": "#/definitions/PersistenceConfig"
+    }
+  },
+  "definitions": {
+    "Step": {
+      "type": "object",
+      "required": ["id", "title", "type", "viewId", "navigation"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Unique step identifier (kebab-case)"
+        },
+        "title": {
+          "type": "string",
+          "description": "User-facing step title"
+        },
+        "description": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["mfe", "form", "review", "confirmation"],
+          "description": "Step type (mfe = micro-frontend module)"
+        },
+        "viewId": {
+          "type": "string",
+          "pattern": "^[0-9]{4,}-[a-z0-9-]+$",
+          "description": "View identifier for rendering (format: productId-stepId)"
+        },
+        "remote": {
+          "$ref": "#/definitions/RemoteModule"
+        },
+        "navigation": {
+          "$ref": "#/definitions/Navigation"
+        },
+        "guards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Guard"
+          }
+        },
+        "interstep": {
+          "$ref": "#/definitions/InterstepActions"
+        },
+        "visible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether step is visible in UI navigation (false = technical step)"
+        },
+        "allowBack": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow navigation back to this step"
+        }
+      }
+    },
+    "RemoteModule": {
+      "type": "object",
+      "required": ["name", "module"],
+      "description": "Module Federation remote configuration",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Remote application name (e.g., 'mfe_quotation')"
+        },
+        "module": {
+          "type": "string",
+          "pattern": "^\\./[A-Z][a-zA-Z]+View$",
+          "description": "Exported module path (e.g., './QuickQuoteView')"
+        }
+      }
+    },
+    "Navigation": {
+      "type": "object",
+      "properties": {
+        "next": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Static next step ID"
+            },
+            {
+              "type": "null",
+              "description": "No next step (final step)"
+            },
+            {
+              "$ref": "#/definitions/ConditionalNavigation"
+            }
+          ]
+        },
+        "back": {
+          "type": ["string", "null"],
+          "description": "Previous step ID (null if no back navigation)"
+        },
+        "final": {
+          "type": "boolean",
+          "default": false,
+          "description": "Marks step as final (flow completion)"
+        }
+      }
+    },
+    "ConditionalNavigation": {
+      "type": "object",
+      "required": ["default", "conditions"],
+      "description": "Dynamic navigation based on json-logic conditions",
+      "properties": {
+        "default": {
+          "type": "string",
+          "description": "Default next step if no condition matches"
+        },
+        "conditions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/NavigationCondition"
+          }
+        }
+      }
+    },
+    "NavigationCondition": {
+      "type": "object",
+      "required": ["if", "to"],
+      "properties": {
+        "if": {
+          "type": "object",
+          "description": "json-logic condition expression"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target step ID if condition is true"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Effect"
+          },
+          "description": "Side effects to apply when condition matches"
+        }
+      }
+    },
+    "Guard": {
+      "type": "object",
+      "required": ["id", "condition"],
+      "description": "Validation guard with json-logic condition",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*$",
+          "description": "Guard identifier (camelCase)"
+        },
+        "condition": {
+          "type": "object",
+          "description": "json-logic expression (e.g., {'!!': [{'var': 'context.dossierId'}]})"
+        },
+        "errorPage": {
+          "type": "string",
+          "pattern": "^\\/error\\/[a-z0-9-]+$",
+          "description": "Error page route if guard fails"
+        },
+        "message": {
+          "type": "string",
+          "description": "User-facing error message"
+        }
+      }
+    },
+    "InterstepActions": {
+      "type": "object",
+      "description": "Actions executed between step transitions",
+      "properties": {
+        "beforeNext": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Action"
+          },
+          "description": "Actions to execute before transitioning to next step"
+        },
+        "onSuccess": {
+          "$ref": "#/definitions/NavigationAction",
+          "description": "Action to execute on successful pipeline completion"
+        },
+        "onError": {
+          "$ref": "#/definitions/ErrorPolicy",
+          "description": "Error handling policy for this step"
+        }
+      }
+    },
+    "Action": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]*$",
+          "description": "Action identifier (camelCase)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["http", "signalr", "analytics", "storage"],
+          "description": "Action type"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "http"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/definitions/HttpAction"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "signalr"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/definitions/SignalRAction"
+          }
+        }
+      ]
+    },
+    "HttpAction": {
+      "type": "object",
+      "required": ["method", "url"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^\\/api\\/",
+          "description": "Relative API endpoint (must start with /api/)"
+        },
+        "body": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "string",
+              "pattern": "^\\{\\{[a-zA-Z0-9.]+\\}\\}$",
+              "description": "Template variable reference"
+            }
+          ]
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "timeout": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000,
+          "default": 5000,
+          "description": "Request timeout in milliseconds"
+        },
+        "mapResult": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "description": "JSONPath expression (e.g., '$.data.id') or simple key"
+          },
+          "description": "Map response fields to context/results paths"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["warn", "block", "fatal"],
+          "default": "block",
+          "description": "Error severity (warn=log only, block=abort pipeline, fatal=abort flow)"
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "maxAttempts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5,
+              "default": 3
+            },
+            "backoff": {
+              "type": "string",
+              "enum": ["linear", "exponential"],
+              "default": "exponential"
+            },
+            "initialDelay": {
+              "type": "integer",
+              "minimum": 100,
+              "default": 1000
+            }
+          }
+        },
+        "rollback": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RollbackAction"
+          },
+          "description": "Actions to execute if this action fails (compensating transactions)"
+        },
+        "onError": {
+          "$ref": "#/definitions/NavigationAction"
+        }
+      }
+    },
+    "SignalRAction": {
+      "type": "object",
+      "required": ["event", "payload"],
+      "properties": {
+        "event": {
+          "type": "string",
+          "enum": ["StepCompleted", "FlowCompleted", "ErrorOccurred", "ProgressUpdate"],
+          "description": "SignalR event name"
+        },
+        "payload": {
+          "type": "object",
+          "description": "Event payload (supports template interpolation)"
+        }
+      }
+    },
+    "RollbackAction": {
+      "type": "object",
+      "required": ["type", "method", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "http"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["DELETE", "POST", "PUT"]
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^\\/api\\/"
+        },
+        "body": {
+          "type": "object"
+        }
+      }
+    },
+    "Effect": {
+      "type": "object",
+      "description": "Context mutation effect",
+      "properties": {
+        "assign": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": "Key-value pairs to assign to context (supports template interpolation)"
+        },
+        "clear": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Context path to delete (dot notation)"
+          }
+        }
+      }
+    },
+    "NavigationAction": {
+      "type": "object",
+      "required": ["navigate"],
+      "properties": {
+        "navigate": {
+          "type": "string",
+          "description": "Target route (e.g., '/success', '/error/save-failed')"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Query parameters for navigation"
+        }
+      }
+    },
+    "ErrorPolicy": {
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["stay", "goto"],
+          "default": "stay",
+          "description": "stay=remain on current step, goto=navigate to error page"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^\\/error\\/[a-z0-9-]+$",
+          "description": "Error page route (required if strategy=goto)"
+        },
+        "allowRetry": {
+          "type": "boolean",
+          "default": true,
+          "description": "Allow user to retry failed action"
+        }
+      }
+    },
+    "ErrorHandling": {
+      "type": "object",
+      "properties": {
+        "errorStep": {
+          "type": "string",
+          "description": "Global error step ID for fatal errors"
+        },
+        "errorPages": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ErrorPage"
+          }
+        },
+        "retry": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "maxAttempts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 3
+            },
+            "backoff": {
+              "type": "string",
+              "enum": ["linear", "exponential"],
+              "default": "exponential"
+            },
+            "initialDelay": {
+              "type": "integer",
+              "minimum": 100,
+              "default": 1000
+            },
+            "maxDelay": {
+              "type": "integer",
+              "minimum": 1000,
+              "default": 5000
+            }
+          }
+        }
+      }
+    },
+    "ErrorPage": {
+      "type": "object",
+      "required": ["title", "message"],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "error"],
+          "default": "error"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["retry", "go-back", "contact-support", "restart", "schedule-call"]
+          }
+        },
+        "canRetry": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "SignalRConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "hubUrl": {
+          "type": "string",
+          "pattern": "^\\/hubs\\/[a-z0-9-]+$",
+          "default": "/hubs/flow-progress"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["StepCompleted", "FlowCompleted", "ErrorOccurred", "ProgressUpdate"]
+          }
+        },
+        "reconnect": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "maxAttempts": {
+              "type": "integer",
+              "default": 5
+            }
+          }
+        }
+      }
+    },
+    "PersistenceConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "storage": {
+          "type": "string",
+          "enum": ["localStorage", "sessionStorage", "indexedDB"],
+          "default": "localStorage"
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^nn-flow-[0-9]{4,}$",
+          "description": "Storage key (format: nn-flow-{productId})"
+        },
+        "expiration": {
+          "type": "integer",
+          "minimum": 3600000,
+          "maximum": 2592000000,
+          "default": 86400000,
+          "description": "TTL in milliseconds (default: 24 hours)"
+        },
+        "encryptSensitiveData": {
+          "type": "boolean",
+          "default": true
+        },
+        "sensitiveFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Field paths to encrypt (e.g., ['curp', 'rfc', 'signature'])"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,572 @@
+{
+  "$schema": "https://nn.com/schemas/flow-dsl-v2.json",
+  "id": "7006",
+  "name": "Vida - Flujo Completo con Dossier",
+  "version": "2.0.0",
+  "productType": "vida",
+  "metadata": {
+    "description": "Flujo completo de cotización de vida con integración dossier",
+    "estimatedTime": "15-20 minutos",
+    "requiresUnderwriting": true,
+    "createdAt": "2025-10-03",
+    "updatedAt": "2025-10-03"
+  },
+  "initialContext": {
+    "dossierId": null,
+    "productType": "vida",
+    "currentStep": null,
+    "completedSteps": [],
+    "errors": []
+  },
+  "steps": [
+    {
+      "id": "quickquote",
+      "title": "Calculadora",
+      "type": "mfe",
+      "viewId": "7006-quickquote",
+      "remote": {
+        "name": "mfe_quick_quote",
+        "module": "./QuickQuoteView"
+      },
+      "navigation": {
+        "next": "underwriting",
+        "back": null
+      },
+      "guards": [
+        {
+          "id": "hasDossierId",
+          "condition": {
+            "!!": [{"var": "context.dossierId"}]
+          },
+          "errorPage": "/error/session-expired",
+          "message": "Sesión expirada"
+        }
+      ],
+      "interstep": {
+        "beforeNext": [
+          {
+            "id": "saveToDossier",
+            "type": "http",
+            "method": "PUT",
+            "url": "/api/dossier/{{context.dossierId}}/steps/quickquote",
+            "body": "{{session.quickquote}}",
+            "timeout": 5000,
+            "mapResult": {
+              "results.quickquote.saveToDossier.status": "$.status",
+              "results.quickquote.saveToDossier.timestamp": "$.timestamp"
+            },
+            "severity": "block",
+            "onError": {
+              "navigate": "/error/save-failed",
+              "params": {
+                "step": "quickquote",
+                "errorCode": "{{error.code}}"
+              }
+            }
+          },
+          {
+            "id": "notifyProgress",
+            "type": "signalr",
+            "event": "StepCompleted",
+            "payload": {
+              "dossierId": "{{context.dossierId}}",
+              "step": "quickquote",
+              "progress": 20
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "underwriting",
+      "title": "Declaración de salud",
+      "type": "mfe",
+      "viewId": "7006-underwriting",
+      "remote": {
+        "name": "mfe_underwriting",
+        "module": "./UnderwritingView"
+      },
+      "navigation": {
+        "next": {
+          "default": "personal-data",
+          "conditions": [
+            {
+              "if": {
+                ">": [{"var": "context.riskScore"}, 80]
+              },
+              "to": "error-step",
+              "effects": [
+                {
+                  "assign": {
+                    "session.errorReason": "high-risk",
+                    "session.riskScore": "{{context.riskScore}}"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "back": "quickquote"
+      },
+      "guards": [
+        {
+          "id": "hasDossierId",
+          "condition": {
+            "!!": [{"var": "context.dossierId"}]
+          },
+          "errorPage": "/error/session-expired"
+        }
+      ],
+      "interstep": {
+        "beforeNext": [
+          {
+            "id": "saveToDossier",
+            "type": "http",
+            "method": "PUT",
+            "url": "/api/dossier/{{context.dossierId}}/steps/underwriting",
+            "body": "{{session.underwriting}}",
+            "timeout": 5000,
+            "mapResult": {
+              "results.underwriting.saveToDossier.status": "$.status"
+            },
+            "severity": "block"
+          },
+          {
+            "id": "calculateRisk",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/risk/calculate",
+            "body": {
+              "dossierId": "{{context.dossierId}}",
+              "medicalHistory": "{{session.underwriting}}"
+            },
+            "timeout": 5000,
+            "mapResult": {
+              "context.riskScore": "$.riskScore",
+              "results.underwriting.calculateRisk.score": "$.riskScore",
+              "results.underwriting.calculateRisk.factors": "$.riskFactors"
+            },
+            "severity": "block"
+          },
+          {
+            "id": "notifyProgress",
+            "type": "signalr",
+            "event": "StepCompleted",
+            "payload": {
+              "dossierId": "{{context.dossierId}}",
+              "step": "underwriting",
+              "progress": 40,
+              "riskScore": "{{context.riskScore}}"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "personal-data",
+      "title": "Datos personales",
+      "type": "mfe",
+      "viewId": "7006-personal-data",
+      "remote": {
+        "name": "mfe_quotation",
+        "module": "./PersonalDataView"
+      },
+      "navigation": {
+        "next": "benefits",
+        "back": "underwriting"
+      },
+      "guards": [
+        {
+          "id": "hasDossierId",
+          "condition": {
+            "!!": [{"var": "context.dossierId"}]
+          },
+          "errorPage": "/error/session-expired"
+        },
+        {
+          "id": "isIdentityValid",
+          "condition": {
+            "and": [
+              {"!!": [{"var": "session.personalData.curp"}]},
+              {"!!": [{"var": "session.personalData.rfc"}]}
+            ]
+          },
+          "errorPage": "/error/incomplete-data",
+          "message": "Falta CURP o RFC"
+        }
+      ],
+      "interstep": {
+        "beforeNext": [
+          {
+            "id": "validateIdentity",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/identity/validate",
+            "body": {
+              "curp": "{{session.personalData.curp}}",
+              "rfc": "{{session.personalData.rfc}}",
+              "firstName": "{{session.personalData.firstName}}",
+              "lastName": "{{session.personalData.lastName}}"
+            },
+            "timeout": 10000,
+            "mapResult": {
+              "context.identityValidated": "$.valid",
+              "results.personalData.validateIdentity.status": "$.status",
+              "results.personalData.validateIdentity.matchScore": "$.matchScore"
+            },
+            "severity": "fatal"
+          },
+          {
+            "id": "saveToDossier",
+            "type": "http",
+            "method": "PUT",
+            "url": "/api/dossier/{{context.dossierId}}/steps/personal-data",
+            "body": "{{session.personalData}}",
+            "timeout": 5000,
+            "mapResult": {
+              "results.personalData.saveToDossier.status": "$.status"
+            },
+            "severity": "block"
+          },
+          {
+            "id": "createApplicant",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/applicants/create",
+            "body": {
+              "dossierId": "{{context.dossierId}}",
+              "personalData": "{{session.personalData}}"
+            },
+            "timeout": 5000,
+            "mapResult": {
+              "context.applicantId": "$.applicantId",
+              "results.personalData.createApplicant.id": "$.applicantId",
+              "results.personalData.createApplicant.createdAt": "$.createdAt"
+            },
+            "severity": "fatal",
+            "rollback": [
+              {
+                "type": "http",
+                "method": "DELETE",
+                "url": "/api/dossier/{{context.dossierId}}/steps/personal-data"
+              }
+            ]
+          },
+          {
+            "id": "notifyProgress",
+            "type": "signalr",
+            "event": "StepCompleted",
+            "payload": {
+              "dossierId": "{{context.dossierId}}",
+              "step": "personal-data",
+              "progress": 60
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "benefits",
+      "title": "Beneficiarios",
+      "type": "mfe",
+      "viewId": "7006-benefits",
+      "remote": {
+        "name": "mfe_quotation",
+        "module": "./BenefitsView"
+      },
+      "navigation": {
+        "next": "signature",
+        "back": "personal-data"
+      },
+      "guards": [
+        {
+          "id": "hasDossierId",
+          "condition": {
+            "!!": [{"var": "context.dossierId"}]
+          },
+          "errorPage": "/error/session-expired"
+        },
+        {
+          "id": "hasApplicantId",
+          "condition": {
+            "!!": [{"var": "context.applicantId"}]
+          },
+          "errorPage": "/error/applicant-not-found"
+        },
+        {
+          "id": "isTotalPercentage100",
+          "condition": {
+            "===": [
+              {
+                "reduce": [
+                  {"var": "session.benefits.beneficiaries"},
+                  {"+": [{"var": "accumulator"}, {"var": "current.percentage"}]},
+                  0
+                ]
+              },
+              100
+            ]
+          },
+          "errorPage": "/error/invalid-percentages",
+          "message": "La suma de porcentajes debe ser 100%"
+        }
+      ],
+      "interstep": {
+        "beforeNext": [
+          {
+            "id": "validateBeneficiaries",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/beneficiaries/validate",
+            "body": {
+              "beneficiaries": "{{session.benefits.beneficiaries}}"
+            },
+            "timeout": 5000,
+            "mapResult": {
+              "results.benefits.validateBeneficiaries.valid": "$.valid",
+              "results.benefits.validateBeneficiaries.warnings": "$.warnings"
+            },
+            "severity": "warn"
+          },
+          {
+            "id": "saveToDossier",
+            "type": "http",
+            "method": "PUT",
+            "url": "/api/dossier/{{context.dossierId}}/steps/benefits",
+            "body": "{{session.benefits}}",
+            "timeout": 5000,
+            "mapResult": {
+              "results.benefits.saveToDossier.status": "$.status"
+            },
+            "severity": "block"
+          },
+          {
+            "id": "notifyProgress",
+            "type": "signalr",
+            "event": "StepCompleted",
+            "payload": {
+              "dossierId": "{{context.dossierId}}",
+              "step": "benefits",
+              "progress": 80
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "signature",
+      "title": "Firma",
+      "type": "mfe",
+      "viewId": "7006-signature",
+      "remote": {
+        "name": "mfe_quotation",
+        "module": "./SignatureView"
+      },
+      "navigation": {
+        "next": null,
+        "back": "benefits",
+        "final": true
+      },
+      "guards": [
+        {
+          "id": "hasDossierId",
+          "condition": {
+            "!!": [{"var": "context.dossierId"}]
+          },
+          "errorPage": "/error/session-expired"
+        },
+        {
+          "id": "hasApplicantId",
+          "condition": {
+            "!!": [{"var": "context.applicantId"}]
+          },
+          "errorPage": "/error/applicant-not-found"
+        },
+        {
+          "id": "hasCompletedAllSteps",
+          "condition": {
+            "and": [
+              {"!!": [{"var": "results.quickquote.saveToDossier.status"}]},
+              {"!!": [{"var": "results.underwriting.calculateRisk.score"}]},
+              {"!!": [{"var": "results.personalData.createApplicant.id"}]},
+              {"!!": [{"var": "results.benefits.saveToDossier.status"}]}
+            ]
+          },
+          "errorPage": "/error/incomplete-flow",
+          "message": "Faltan pasos por completar"
+        }
+      ],
+      "interstep": {
+        "beforeNext": [
+          {
+            "id": "submitSignature",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/signatures/submit",
+            "body": {
+              "dossierId": "{{context.dossierId}}",
+              "applicantId": "{{context.applicantId}}",
+              "signature": "{{session.signature.data}}",
+              "metadata": {
+                "ipAddress": "{{client.ip}}",
+                "userAgent": "{{client.userAgent}}",
+                "timestamp": "{{now}}"
+              }
+            },
+            "timeout": 10000,
+            "mapResult": {
+              "context.signatureId": "$.signatureId",
+              "results.signature.submitSignature.id": "$.signatureId",
+              "results.signature.submitSignature.timestamp": "$.timestamp"
+            },
+            "severity": "fatal"
+          },
+          {
+            "id": "finalizeDossier",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/dossier/{{context.dossierId}}/finalize",
+            "body": {
+              "signatureId": "{{context.signatureId}}",
+              "completedAt": "{{now}}"
+            },
+            "timeout": 5000,
+            "mapResult": {
+              "context.policyId": "$.policyId",
+              "results.signature.finalizeDossier.policyId": "$.policyId",
+              "results.signature.finalizeDossier.status": "$.status"
+            },
+            "severity": "fatal",
+            "rollback": [
+              {
+                "type": "http",
+                "method": "DELETE",
+                "url": "/api/signatures/{{context.signatureId}}/void"
+              }
+            ]
+          },
+          {
+            "id": "sendConfirmation",
+            "type": "http",
+            "method": "POST",
+            "url": "/api/notifications/send",
+            "body": {
+              "dossierId": "{{context.dossierId}}",
+              "policyId": "{{context.policyId}}",
+              "channels": ["email", "sms"]
+            },
+            "timeout": 5000,
+            "severity": "warn"
+          },
+          {
+            "id": "notifyCompletion",
+            "type": "signalr",
+            "event": "FlowCompleted",
+            "payload": {
+              "dossierId": "{{context.dossierId}}",
+              "policyId": "{{context.policyId}}",
+              "progress": 100,
+              "completedAt": "{{now}}"
+            }
+          }
+        ],
+        "onSuccess": {
+          "navigate": "/success",
+          "params": {
+            "policyId": "{{context.policyId}}",
+            "dossierId": "{{context.dossierId}}"
+          }
+        }
+      }
+    }
+  ],
+  "errorHandling": {
+    "errorPages": {
+      "/error/save-failed": {
+        "title": "Error al guardar",
+        "message": "No pudimos guardar tu información en el expediente. Por favor, intenta de nuevo.",
+        "severity": "error",
+        "actions": ["retry", "contact-support"],
+        "canRetry": true
+      },
+      "/error/session-expired": {
+        "title": "Sesión expirada",
+        "message": "Tu sesión ha expirado. Por favor, inicia el proceso de nuevo.",
+        "severity": "warning",
+        "actions": ["restart"],
+        "canRetry": false
+      },
+      "/error/high-risk-detected": {
+        "title": "Evaluación manual requerida",
+        "message": "Tu solicitud requiere evaluación por un especialista. Te contactaremos en las próximas 24 horas.",
+        "severity": "info",
+        "actions": ["contact-support", "schedule-call"],
+        "canRetry": false
+      },
+      "/error/risk-calculation-failed": {
+        "title": "Error en evaluación",
+        "message": "Hubo un problema al evaluar tu solicitud. Por favor, intenta de nuevo.",
+        "severity": "error",
+        "actions": ["retry", "go-back"],
+        "canRetry": true
+      },
+      "/error/identity-verification-failed": {
+        "title": "Error en verificación de identidad",
+        "message": "No pudimos verificar tu identidad. Verifica que tus datos sean correctos.",
+        "severity": "error",
+        "actions": ["go-back", "contact-support"],
+        "canRetry": false
+      },
+      "/error/applicant-not-found": {
+        "title": "Información incompleta",
+        "message": "Falta información personal. Por favor, completa el paso anterior.",
+        "severity": "warning",
+        "actions": ["go-back"],
+        "canRetry": false
+      },
+      "/error/applicant-creation-failed": {
+        "title": "Error al crear perfil",
+        "message": "No pudimos crear tu perfil. Por favor, intenta de nuevo.",
+        "severity": "error",
+        "actions": ["retry", "contact-support"],
+        "canRetry": true
+      },
+      "/error/signature-failed": {
+        "title": "Error en firma electrónica",
+        "message": "No pudimos procesar tu firma. Por favor, intenta de nuevo.",
+        "severity": "error",
+        "actions": ["retry", "contact-support"],
+        "canRetry": true
+      },
+      "/error/finalization-failed": {
+        "title": "Error al finalizar",
+        "message": "Tu solicitud está completa pero hubo un error al finalizar. Contacta a soporte.",
+        "severity": "error",
+        "actions": ["contact-support"],
+        "canRetry": false
+      }
+    },
+    "retry": {
+      "enabled": true,
+      "maxAttempts": 3,
+      "backoff": "exponential",
+      "initialDelay": 1000,
+      "maxDelay": 5000
+    }
+  },
+  "signalr": {
+    "enabled": true,
+    "hubUrl": "/hubs/flow-progress",
+    "events": [
+      "StepCompleted",
+      "FlowCompleted",
+      "ErrorOccurred"
+    ]
+  },
+  "persistence": {
+    "enabled": true,
+    "storage": "localStorage",
+    "key": "nn-flow-7006",
+    "expiration": 86400000
+  }
+}
