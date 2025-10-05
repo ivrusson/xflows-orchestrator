@@ -1,325 +1,545 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
-  "$id": "https://schemas.xflows.com/v1/flows", 
-  "title": "XFlows Flow Configuration Schema v1",
-  "description": "JSON Schema for XFlows flow configuration and state machine definitions",
-  "version": "1.0.0",
-  "author": "XFlows Development Team",
-  "lastUpdated": "2024-12-19T15:30:00Z",
-  
+  "$id": "https://xflows.dev/flow-schema.json",
+  "title": "XFlows Flow Configuration Schema",
+  "description": "JSON Schema for XFlows flow configuration definitions",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*$",
+      "description": "Unique identifier for the flow"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable name for the flow"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the flow"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the flow"
+    },
+    "initialStep": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Initial step ID"
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Initial context data"
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ActionConfig"
+      },
+      "description": "Global actions configuration"
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/GuardConfig"
+      },
+      "description": "Global guards configuration"
+    },
+    "actors": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/ActorConfig"
+      },
+      "description": "Global actors configuration"
+    },
+    "plugins": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/PluginConfig"
+      },
+      "description": "Global plugins configuration"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Step"
+      },
+      "minItems": 1,
+      "description": "Flow steps configuration"
+    }
+  },
+  "required": ["id", "name", "initialStep", "context", "steps"],
+  "additionalProperties": false,
   "definitions": {
-    "flowConfig": {
+    "Step": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the flow",
-          "pattern": "^[a-z0-9-_]+$",
-          "minLength": 3,
-          "maxLength": 50
+          "minLength": 1,
+          "description": "Unique step identifier"
         },
-        "initial": {
+        "name": {
           "type": "string",
-          "description": "Initial state of the flow"
+          "minLength": 1,
+          "description": "Human-readable step name"
         },
-        "context": {
-          "type": "object",
-          "description": "Initial context data",
-          "patternProperties": {
-            "^[a-zA-Z0-9_]+$": {}
-          }
+        "view": {
+          "$ref": "#/definitions/ViewConfig"
         },
-        "states": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-zA-Z0-9.-_]+$": {
-              "$ref": "#/definitions/stateConfig"
-            }
-          }
-        },
-        "plugins": {
+        "hooks": {
           "type": "object",
           "properties": {
-            "actors": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z0-9_]+$": {
-                  "$ref": "#/definitions/pluginConfig"
-                }
+            "before": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hook"
               }
             },
-            "tools": {
-              "type": "object", 
-              "patternProperties": {
-                "^[a-zA-Z0-9_]+$": {
-                  "$ref": "#/definitions/pluginConfig"
-                }
-              }
-            },
-            "guards": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z0-9_]+$": {
-                  "$ref": "#/definitions/pluginConfig"
-                }
-              }
-            },
-            "actions": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z0-9_]+$": {
-                  "$ref": "#/definitions/pluginConfig"
-                }
-              }
-            },
-            "ui": {
-              "type": "object",
-              "patternProperties": {
-                "^[a-zA-Z0-9_]+$": {
-                  "$ref": "#/definitions/pluginConfig"
-                }
+            "after": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hook"
               }
             }
-          }
+          },
+          "additionalProperties": false
+        },
+        "invoke": {
+          "$ref": "#/definitions/InvokeConfig"
+        },
+        "navigation": {
+          "$ref": "#/definitions/Navigation"
         }
       },
-      "required": ["id", "initial", "context", "states"]
+      "required": ["id", "name", "view", "navigation"],
+      "additionalProperties": false
     },
-    
-    "stateConfig": {
+    "ViewConfig": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["final", "compound", "atomic"],
-          "default": "atomic"
+          "enum": ["form", "display", "decision", "loading", "error", "success", "federated-module", "custom-component"],
+          "description": "Type of view to render"
         },
-        "meta": {
-          "type": "object",
-          "properties": {
-            "view": {
-              "type": "object",
-              "properties": {
-                "moduleId": {
-                  "type": "string",
-                  "description": "Module identifier for UI rendering"
-                },
-                "component": {
-                  "type": "string",
-                  "description": "Specific component to render"
-                },
-                "slot": {
-                  "type": "string",
-                  "description": "Render slot identifier"
-                },
-                "plugin": {
-                  "type": "string",
-                  "description": "Plugin ID for dynamic rendering"
-                },
-                "pluginConfig": {
-                  "type": "object",
-                  "description": "Plugin-specific configuration"
-                }
-              },
-              "required": ["moduleId"]
-            },
-            "description": {
-              "type": "string",
-              "description": "Human-readable state description",
-              "maxLength": 200
-            },
-            "icon": {
-              "type": "string",
-              "description": "Icon identifier or emoji",
-              "maxLength": 10
-            }
-          }
-        },
-        "pluginInvoke": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/pluginInvoke"
-          },
-          "description": "Plugin-based asynchronous operations"
-        },
-        "pluginUI": {
-          "$ref": "#/definitions/pluginUI"
-        },
-        "pluginActions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/pluginAction"
-          },
-          "description": "Plugin-based actions to execute"
-        },
-        "on": {
-          "type": "object",
-          "patternProperties": {
-            "^[A-Z0-9_.]+$": {
-              "$ref": "#/definitions/transition"
-            }
-          },
-          "description": "State transitions and event handlers"
-        }
-      }
-    },
-    
-    "pluginConfig": {
-      "type": "object",
-      "properties": {
-        "id": {
+        "title": {
           "type": "string",
-          "description": "Plugin identifier"
+          "description": "View title"
         },
-        "config": {
+        "subtitle": {
+          "type": "string",
+          "description": "View subtitle"
+        },
+        "message": {
+          "type": "string",
+          "description": "View message"
+        },
+        "template": {
+          "type": "string",
+          "description": "Template string with {{variable}} syntax"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FormField"
+          },
+          "description": "Form fields for form views"
+        },
+        "content": {
           "type": "object",
-          "description": "Plugin-specific configuration"
+          "description": "Additional content data"
         },
-        "enabled": {
-          "type": "boolean",
-          "description": "Whether plugin is enabled",
-          "default": true
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ViewAction"
+          },
+          "description": "View actions"
+        },
+        "data": {
+          "type": "string",
+          "description": "Data template string"
+        },
+        "moduleId": {
+          "type": "string",
+          "description": "Module identifier for federated modules"
+        },
+        "moduleUrl": {
+          "type": "string",
+          "description": "Module URL for federated modules"
+        },
+        "componentName": {
+          "type": "string",
+          "description": "Component name for federated modules"
+        },
+        "props": {
+          "type": "object",
+          "description": "Props to pass to component"
+        },
+        "fallback": {
+          "$ref": "#/definitions/ViewConfig",
+          "description": "Fallback view configuration"
+        },
+        "componentPath": {
+          "type": "string",
+          "description": "Path to custom component"
         }
       },
-      "required": ["id", "config"]
+      "required": ["type"],
+      "additionalProperties": false
     },
-    
-    "pluginInvoke": {
+    "FormField": {
       "type": "object",
       "properties": {
-        "id": {
+        "name": {
           "type": "string",
-          "description": "Unique invoke identifier"
+          "minLength": 1,
+          "description": "Field name"
         },
-        "pluginId": {
+        "type": {
           "type": "string",
-          "description": "Plugin ID to invoke"
+          "enum": ["text", "email", "number", "select", "radio", "checkbox", "textarea", "file", "date"],
+          "description": "Field type"
         },
-        "pluginType": {
+        "label": {
           "type": "string",
-          "enum": ["actor", "tool"],
-          "description": "Type of plugin to invoke"
+          "description": "Field label"
         },
-        "config": {
-          "type": "object",
-          "description": "Plugin-specific configuration"
+        "placeholder": {
+          "type": "string",
+          "description": "Field placeholder"
         },
-        "timeout": {
+        "required": {
+          "type": "boolean",
+          "description": "Whether field is required"
+        },
+        "min": {
           "type": "number",
-          "description": "Timeout in milliseconds",
-          "default": 30000,
-          "minimum": 1000,
-          "maximum": 300000
+          "description": "Minimum value for number fields"
         },
-        "retryPolicy": {
+        "max": {
+          "type": "number",
+          "description": "Maximum value for number fields"
+        },
+        "step": {
+          "type": "number",
+          "description": "Step value for number fields"
+        },
+        "rows": {
+          "type": "number",
+          "description": "Number of rows for textarea"
+        },
+        "maxLength": {
+          "type": "number",
+          "description": "Maximum length for text fields"
+        },
+        "accept": {
+          "type": "string",
+          "description": "Accepted file types for file fields"
+        },
+        "maxSize": {
+          "type": "string",
+          "description": "Maximum file size for file fields"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "string" },
+              "label": { "type": "string" }
+            },
+            "required": ["value", "label"],
+            "additionalProperties": false
+          },
+          "description": "Options for select/radio fields"
+        },
+        "validation": {
           "type": "object",
           "properties": {
-            "attempts": {
-              "type": "integer",
-              "description": "Number of retry attempts",
-              "default": 3,
-              "minimum": 0,
-              "maximum": 10
-            },
-            "retryDelay": {
-              "type": "number",
-              "description": "Delay between retries in milliseconds",
-              "default": 1000,
-              "minimum": 100,
-              "maximum": 10000
-            },
-            "backoff": {
-              "type": "string",
-              "enum": ["linear", "exponential"],
-              "description": "Retry backoff strategy",
-              "default": "linear"
-            }
-          }
+            "minLength": { "type": "number" },
+            "maxLength": { "type": "number" },
+            "pattern": { "type": "string" }
+          },
+          "additionalProperties": false,
+          "description": "Field validation rules"
         }
       },
-      "required": ["id", "pluginId", "pluginType", "config"]
+      "required": ["name", "type", "label"],
+      "additionalProperties": false
     },
-    
-    "pluginUI": {
+    "ViewAction": {
       "type": "object",
       "properties": {
-        "pluginId": {
+        "type": {
           "type": "string",
-          "description": "UI plugin identifier"
+          "enum": ["submit", "button"],
+          "description": "Action type"
         },
-        "config": {
-          "type": "object",
-          "description": "Plugin-specific UI configuration"
-        },
-        "slot": {
+        "label": {
           "type": "string",
-          "description": "UI slot identifier"
+          "minLength": 1,
+          "description": "Action label"
         },
-        "responsive": {
-          "type": "boolean",
-          "description": "Enable responsive UI",
-          "default": true
+        "event": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Event to trigger"
         }
       },
-      "required": ["pluginId", "config"]
+      "required": ["type", "label", "event"],
+      "additionalProperties": false
     },
-    
-    "pluginAction": {
-      "type": "object", 
+    "Hook": {
+      "type": "object",
       "properties": {
-        "actionId": {
+        "id": {
           "type": "string",
-          "description": "Action identifier" 
+          "minLength": 1,
+          "description": "Hook identifier"
         },
-        "pluginId": {
+        "type": {
           "type": "string",
-          "description": "Plugin identifier"
+          "enum": ["http_call", "assign", "log", "analytics", "delay", "condition"],
+          "description": "Hook type"
         },
-        "config": {
-          "type": "object",
-          "description": "Action-specific configuration"
+        "endpoint": {
+          "type": "string",
+          "description": "HTTP endpoint for http_call hooks"
         },
-        "condition": {
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+          "description": "HTTP method for http_call hooks"
+        },
+        "body": {
+          "description": "Request body for http_call hooks"
+        },
+        "headers": {
           "type": "object",
-          "description": "Conditional logic for action execution"
+          "additionalProperties": { "type": "string" },
+          "description": "HTTP headers for http_call hooks"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target for assign hooks"
+        },
+        "value": {
+          "description": "Value for assign hooks"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message for log hooks"
+        },
+        "level": {
+          "type": "string",
+          "enum": ["info", "warn", "error"],
+          "description": "Log level for log hooks"
+        },
+        "event": {
+          "type": "string",
+          "description": "Event for analytics hooks"
+        },
+        "data": {
+          "description": "Data for analytics hooks"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration in milliseconds for delay hooks"
+        },
+        "expression": {
+          "description": "Expression for condition hooks"
+        },
+        "onTrue": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Hook" },
+          "description": "Hooks to execute when condition is true"
+        },
+        "onFalse": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Hook" },
+          "description": "Hooks to execute when condition is false"
+        },
+        "updateContext": {
+          "type": "string",
+          "description": "Context update path"
+        },
+        "onError": {
+          "type": "string",
+          "enum": ["fail", "ignore"],
+          "description": "Error handling strategy"
         }
       },
-      "required": ["actionId", "pluginId", "config"]
+      "required": ["id", "type"],
+      "additionalProperties": false
     },
-    
-    "transition": {
+    "Navigation": {
+      "type": "object",
+      "properties": {
+        "onNext": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/definitions/NavigationConfig" },
+            { "type": "array", "items": { "$ref": "#/definitions/NavigationConfig" } }
+          ],
+          "description": "Next step navigation"
+        },
+        "onBack": {
+          "type": "string",
+          "description": "Back step navigation"
+        },
+        "onError": {
+          "type": "string",
+          "description": "Error step navigation"
+        },
+        "onCancel": {
+          "type": "string",
+          "description": "Cancel step navigation"
+        }
+      },
+      "additionalProperties": true
+    },
+    "NavigationConfig": {
       "type": "object",
       "properties": {
         "target": {
           "type": "string",
-          "description": "Target state for transition"
-        },
-        "actions": {
-          "anyOf": [
-            {"type": "string"},
-            {"type": "array", "items": {"type": "string"}}
-          ],
-          "description": "Actions to execute on transition"
+          "minLength": 1,
+          "description": "Target step ID"
         },
         "guard": {
-          "anyOf": [
-            {"type": "string"},
-            {"type": "object"}
+          "type": "string",
+          "description": "Guard condition"
+        },
+        "actions": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "array", "items": { "type": "string" } }
           ],
-          "description": "Guard condition for transition"
+          "description": "Actions to execute"
         }
-      }
-    }
-  },
-  
-  "type": "object",
-  "properties": {
-    "flowConfig": {
-      "$ref": "#/definitions/flowConfig"
+      },
+      "required": ["target"],
+      "additionalProperties": false
     },
-    "stateConfig": {
-      "$ref": "#/definitions/stateConfig"
+    "InvokeConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Invoke identifier"
+        },
+        "src": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Source for invocation"
+        },
+        "input": {
+          "description": "Input data for invocation"
+        },
+        "onDone": {
+          "$ref": "#/definitions/NavigationConfig",
+          "description": "Navigation on successful completion"
+        },
+        "onError": {
+          "$ref": "#/definitions/NavigationConfig",
+          "description": "Navigation on error"
+        }
+      },
+      "required": ["id", "src"],
+      "additionalProperties": false
+    },
+    "ActionConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["assign", "log", "analytics"],
+          "description": "Action type"
+        },
+        "target": {
+          "type": "string",
+          "description": "Target for assign actions"
+        },
+        "value": {
+          "description": "Value for assign actions"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message for log actions"
+        },
+        "event": {
+          "type": "string",
+          "description": "Event for analytics actions"
+        },
+        "data": {
+          "description": "Data for analytics actions"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "GuardConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["jsonLogic", "simple"],
+          "description": "Guard type"
+        },
+        "expression": {
+          "description": "Expression for jsonLogic guards"
+        },
+        "condition": {
+          "type": "string",
+          "description": "Condition for simple guards"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "ActorConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["fromPromise"],
+          "description": "Actor type"
+        },
+        "endpoint": {
+          "type": "string",
+          "description": "HTTP endpoint"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+          "description": "HTTP method"
+        },
+        "body": {
+          "description": "Request body"
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+    "PluginConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["actor", "action"],
+          "description": "Plugin type"
+        },
+        "config": {
+          "description": "Plugin-specific configuration"
+        }
+      },
+      "required": ["type", "config"],
+      "additionalProperties": false
     }
-  },
-  "additionalProperties": false
+  }
 }
