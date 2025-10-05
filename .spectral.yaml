@@ -1,0 +1,60 @@
+extends: []
+rules:
+  # Flow structure validation
+  flow-root-has-id:
+    given: "$"
+    then:
+      field: id
+      function: truthy
+    severity: error
+    message: "Flow must have an id property"
+  
+  flow-root-has-name:
+    given: "$"
+    then:
+      field: name
+      function: truthy
+    severity: error
+    message: "Flow must have a name property"
+  
+  flow-root-has-initial-step:
+    given: "$"
+    then:
+      field: initialStep
+      function: truthy
+    severity: error
+    message: "Flow must have an initialStep defined"
+  
+  flow-root-has-context:
+    given: "$"
+    then:
+      field: context
+      function: truthy
+    severity: error
+    message: "Flow must have a context object"
+  
+  flow-root-has-steps:
+    given: "$"
+    then:
+      field: steps
+      function: truthy
+    severity: error
+    message: "Flow must have steps array"
+  
+  # View validation
+  view-has-type:
+    given: "$.steps[*].view"
+    then:
+      field: type
+      function: truthy
+    severity: error
+    message: "Views must specify a type"
+  
+  # Navigation validation
+  navigation-has-on-next:
+    given: "$.steps[*].navigation"
+    then:
+      field: onNext
+      function: truthy
+    severity: warn
+    message: "Navigation should typically have onNext defined"
