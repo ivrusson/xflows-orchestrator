@@ -1,0 +1,15 @@
+{
+  "name": "@xflows/renderer-core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rslib build",
+    "build:watch": "rslib build --watch",
+    "dev": "rslib dev"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.15.0"
+  }
+}
