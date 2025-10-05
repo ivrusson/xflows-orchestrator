@@ -1,0 +1,250 @@
+{
+  "id": "user-onboarding-flow",
+  "name": "User Onboarding Flow",
+  "version": "1.0.0",
+  "description": "Complete user onboarding process with form validation and API calls",
+  "initialStep": "welcome",
+  "context": {
+    "user": null,
+    "stepData": {},
+    "errors": [],
+    "ui": {
+      "isLoading": false,
+      "currentStep": "welcome"
+    }
+  },
+  "actions": {
+    "assignStepData": {
+      "type": "assign",
+      "target": "stepData",
+      "value": "{{event.data}}"
+    },
+    "assignError": {
+      "type": "assign",
+      "target": "errors",
+      "value": "{{event.error}}"
+    },
+    "logStep": {
+      "type": "log",
+      "message": "User completed step: {{event.step}}"
+    }
+  },
+  "guards": {
+    "hasValidData": {
+      "type": "jsonLogic",
+      "expression": {
+        ">": [
+          { "var": "validationResult.score" },
+          50
+        ]
+      }
+    }
+  },
+  "actors": {
+    "httpClient": {
+      "type": "fromPromise",
+      "endpoint": "{{endpoint}}",
+      "method": "POST",
+      "body": "{{body}}"
+    }
+  },
+  "steps": [
+    {
+      "id": "welcome",
+      "name": "Welcome Screen",
+      "view": {
+        "type": "display",
+        "title": "Welcome to XFlows!",
+        "subtitle": "Let's get you started",
+        "message": "We'll guide you through a quick setup process to personalize your experience.",
+        "actions": [
+          {
+            "type": "button",
+            "label": "Get Started",
+            "event": "START_ONBOARDING"
+          }
+        ]
+      },
+      "navigation": {
+        "onNext": "personal-info"
+      }
+    },
+    {
+      "id": "personal-info",
+      "name": "Personal Information",
+      "view": {
+        "type": "form",
+        "title": "Personal Information",
+        "subtitle": "Tell us about yourself",
+        "fields": [
+          {
+            "name": "firstName",
+            "type": "text",
+            "label": "First Name",
+            "placeholder": "Enter your first name",
+            "required": true,
+            "validation": {
+              "minLength": 2,
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "lastName",
+            "type": "text",
+            "label": "Last Name",
+            "placeholder": "Enter your last name",
+            "required": true,
+            "validation": {
+              "minLength": 2,
+              "maxLength": 50
+            }
+          },
+          {
+            "name": "email",
+            "type": "email",
+            "label": "Email Address",
+            "placeholder": "Enter your email",
+            "required": true,
+            "validation": {
+              "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "type": "submit",
+            "label": "Continue",
+            "event": "SUBMIT_PERSONAL_INFO"
+          },
+          {
+            "type": "button",
+            "label": "Back",
+            "event": "GO_BACK"
+          }
+        ]
+      },
+      "hooks": {
+        "before": [
+          {
+            "id": "validate-personal-info",
+            "type": "condition",
+            "expression": {
+              "and": [
+                { "var": "firstName" },
+                { "var": "lastName" },
+                { "var": "email" }
+              ]
+            },
+            "onTrue": [
+              {
+                "id": "log-validation",
+                "type": "log",
+                "message": "Personal info validation passed",
+                "level": "info"
+              }
+            ],
+            "onFalse": [
+              {
+                "id": "log-error",
+                "type": "log",
+                "message": "Personal info validation failed",
+                "level": "error"
+              }
+            ]
+          }
+        ],
+        "after": [
+          {
+            "id": "save-personal-info",
+            "type": "http_call",
+            "endpoint": "/api/user/personal-info",
+            "method": "POST",
+            "body": {
+              "firstName": "{{context.firstName}}",
+              "lastName": "{{context.lastName}}",
+              "email": "{{context.email}}"
+            },
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "updateContext": "user",
+            "onError": "ignore"
+          }
+        ]
+      },
+      "navigation": {
+        "onNext": "preferences",
+        "onBack": "welcome"
+      }
+    },
+    {
+      "id": "preferences",
+      "name": "User Preferences",
+      "view": {
+        "type": "form",
+        "title": "Preferences",
+        "subtitle": "Customize your experience",
+        "fields": [
+          {
+            "name": "theme",
+            "type": "select",
+            "label": "Theme Preference",
+            "required": true,
+            "options": [
+              { "value": "light", "label": "Light" },
+              { "value": "dark", "label": "Dark" },
+              { "value": "auto", "label": "Auto" }
+            ]
+          },
+          {
+            "name": "notifications",
+            "type": "checkbox",
+            "label": "Enable Notifications",
+            "required": false
+          },
+          {
+            "name": "newsletter",
+            "type": "checkbox",
+            "label": "Subscribe to Newsletter",
+            "required": false
+          }
+        ],
+        "actions": [
+          {
+            "type": "submit",
+            "label": "Save Preferences",
+            "event": "SAVE_PREFERENCES"
+          },
+          {
+            "type": "button",
+            "label": "Back",
+            "event": "GO_BACK"
+          }
+        ]
+      },
+      "navigation": {
+        "onNext": "complete"
+      }
+    },
+    {
+      "id": "complete",
+      "name": "Setup Complete",
+      "view": {
+        "type": "success",
+        "title": "Setup Complete!",
+        "subtitle": "Welcome to XFlows",
+        "message": "Your account has been set up successfully. You can now start using all the features.",
+        "actions": [
+          {
+            "type": "button",
+            "label": "Go to Dashboard",
+            "event": "GO_TO_DASHBOARD"
+          }
+        ]
+      },
+      "navigation": {
+        "onNext": "dashboard"
+      }
+    }
+  ]
+}

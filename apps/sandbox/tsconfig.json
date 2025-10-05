@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@xflows/core/*": ["../../packages/core/src/*"],
+      "@xflows/adapter-react/*": ["../../packages/adapter-react/src/*"],
+      "@xflows/adapter-vanilla/*": ["../../packages/adapter-vanilla/src/*"],
+      "@xflows/renderer-core/*": ["../../packages/renderer-core/src/*"],
+      "@examples/*": ["../../examples/*"],
+      "components/*": ["./components/*"]
+    }
+  },
+  "include": ["main.tsx", "App.tsx", "components/**/*"]
+}

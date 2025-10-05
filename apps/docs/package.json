@@ -1,0 +1,16 @@
+{
+  "name": "@xflows/docs",
+  "version": "0.1.0",
+  "description": "XFlows documentation site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "docsify serve . --port 9889",
+    "serve": "docsify serve . --port 9889",
+    "build": "echo 'Docsify documentation is ready to serve'",
+    "preview": "docsify serve . --port 9889"
+  },
+  "devDependencies": {
+    "docsify-cli": "^4.4.4"
+  }
+}

@@ -1,0 +1,235 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* XFlows specific styles */
+.xflows-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.xflows-step {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 2rem;
+  margin: 1rem 0;
+  border: 1px solid #333;
+}
+
+.xflows-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.xflows-form input,
+.xflows-form select,
+.xflows-form textarea {
+  padding: 0.75rem;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2a2a2a;
+  color: white;
+  font-size: 1rem;
+}
+
+.xflows-form label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.xflows-button {
+  background: #646cff;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.xflows-button:hover {
+  background: #535bf2;
+}
+
+.xflows-button:disabled {
+  background: #666;
+  cursor: not-allowed;
+}
+
+.xflows-button.secondary {
+  background: #444;
+}
+
+.xflows-button.secondary:hover {
+  background: #555;
+}
+
+.xflows-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.xflows-error {
+  color: #ff6b6b;
+  background: #2d1b1b;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  border: 1px solid #ff6b6b;
+}
+
+.xflows-success {
+  color: #51cf66;
+  background: #1b2d1b;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  border: 1px solid #51cf66;
+}
+
+.xflows-loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.xflows-loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #646cff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Flow Debugger Styles */
+.flow-debugger {
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: left;
+}
+
+.flow-debugger h3 {
+  margin-top: 0;
+  color: #646cff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 0.5rem;
+}
+
+.debug-section {
+  margin: 1rem 0;
+}
+
+.debug-section h4 {
+  color: #888;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.debug-section pre {
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.8rem;
+  color: #ccc;
+}
+
+.debug-section code {
+  background: #0a0a0a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0.5rem;
+  color: #51cf66;
+  font-family: 'Courier New', monospace;
+}
+
+/* Demo Controls */
+.demo-controls {
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+/* Field Error Styles */
+.field-error {
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.field-group {
+  margin-bottom: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+  width: auto;
+}
+
+.view-message {
+  margin: 1rem 0;
+  line-height: 1.6;
+  color: #ccc;
+}
