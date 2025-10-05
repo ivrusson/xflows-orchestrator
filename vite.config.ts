@@ -1,14 +1,5 @@
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 3000,
-    open: true,
-  },
-  build: {
-    outDir: 'dist',
-    sourcemap: true,
-  },
-});
+// Root vite config removed - applications are now in apps/
+// Main applications:
+// - pnpm sandbox     # Apps/sandbox (main testing app)
+// - pnpm demo:react  # Apps/demo-react  
+// - pnpm demo:vanilla # Apps/demo-vanilla

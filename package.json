@@ -12,9 +12,20 @@
     "lint:fix": "biome lint . --write",
     "format": "biome format . --write",
     "check": "biome check . --write",
-    "schema:validate": "node schemas/validate.js",
-    "schema:test": "node schemas/validate.js --examples",
-    "schema:help": "node schemas/validate.js --help"
+    "validate:flow": "node tools/validate-flow.js",
+    "validate:examples": "find examples -name '*-flow.json' -o -name '*-example.json' | xargs -I {} node tools/validate-flow.js {}",
+    "spectral:lint": "spectral lint examples/ -r .spectral.yaml",
+    "sandbox": "pnpm --filter @xflows/sandbox dev",
+    "demo": "pnpm --filter @xflows/react-demo dev",
+    "build:packages": "pnpm -r --filter './packages/*' build",
+    "install:all": "pnpm install",
+    "docs:dev": "pnpm --filter @xflows/docs dev",
+    "docs:serve": "pnpm --filter @xflows/docs serve",
+    "docs:build": "pnpm --filter @xflows/docs build",
+    "test": "pnpm -r --filter './packages/*' test",
+    "test:integration": "./scripts/run-integration-tests.sh",
+    "test:unit": "pnpm -r --filter './packages/*' test",
+    "test:e2e": "pnpm --filter @xflows/core test e2e-integration"
   },
   "dependencies": {
     "@types/ejs": "^3.1.5",
@@ -30,12 +41,13 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@stoplight/spectral-cli": "^6.15.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
-    "@biomejs/biome": "^1.9.4",
     "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^4.4.0"
   },
-  "packageManager": "bun@1.2.23"
+  "packageManager": "pnpm@9.6.0"
 }
