@@ -1,0 +1,6 @@
+* [🏠 Home](README.md)
+* [🚀 Getting Started](guides/getting-started.md)
+* [📚 API Reference](core/api-reference.md)
+* [🔧 Plugin System](guides/plugin-system-guide.md)
+* [💡 Examples](examples/)
+* [🔗 GitHub](https://github.com/your-org/xflows)
