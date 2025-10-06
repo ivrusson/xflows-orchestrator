@@ -47,7 +47,8 @@
         ]
       },
       "navigation": {
-        "onNext": "user-info"
+        "onNext": "user-info",
+        "START_DEMO": "user-info"
       }
     },
     {
@@ -107,7 +108,9 @@
       "navigation": {
         "onNext": "preferences",
         "onBack": "welcome",
-        "BACK": "welcome"
+        "BACK": "welcome",
+        "SUBMIT_USER_INFO": "preferences",
+        "GO_BACK": "welcome"
       }
     },
     {
@@ -158,7 +161,9 @@
       "navigation": {
         "onNext": "api-demo",
         "onBack": "user-info",
-        "BACK": "user-info"
+        "BACK": "user-info",
+        "SAVE_PREFERENCES": "api-demo",
+        "GO_BACK": "user-info"
       }
     },
     {
@@ -216,7 +221,8 @@
         ]
       },
       "navigation": {
-        "onNext": "welcome"
+        "onNext": "welcome",
+        "RESTART_DEMO": "welcome"
       }
     }
   ]
