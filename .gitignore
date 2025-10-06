@@ -7,7 +7,7 @@ bun.lock
 dist/
 build/
 out/
-.buildconfig
+*.buildconfig
 
 # Environment variables
 .env
