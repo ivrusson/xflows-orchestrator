@@ -35,7 +35,7 @@ export class HttpActorPlugin extends ActorPluginImpl {
   async createActor(config: HttpActorConfig): Promise<unknown> {
     return fromPromise(async ({ input }: { input: unknown }) => {
       const templateData: TemplateData = { context: {}, event: {}, step: {} };
-      const parsedInput = this.templateParser.parseTemplate(input, templateData);
+      const parsedInput = this.templateParser.parse(input as string, templateData as unknown as Record<string, unknown>);
       
       const httpConfig = {
         endpoint: config.endpoint,
@@ -43,7 +43,7 @@ export class HttpActorPlugin extends ActorPluginImpl {
         headers: config.headers || {},
         timeout: config.timeout || 30000,
         retries: config.retries || 3,
-        ...parsedInput
+        ...(typeof parsedInput === 'object' && parsedInput !== null ? parsedInput as Record<string, unknown> : {})
       } as HttpActorConfig;
 
       return await this.executeHttpRequest(httpConfig);

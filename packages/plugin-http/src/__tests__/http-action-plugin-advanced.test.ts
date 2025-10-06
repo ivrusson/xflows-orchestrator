@@ -2,34 +2,43 @@
  * Test for advanced HTTP features
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HttpActionPlugin } from '../src/http-action-plugin';
 import { cache } from '@xflows/core';
 
+// Mock response type
+interface MockResponse {
+  ok: boolean;
+  status: number;
+  statusText?: string;
+  json: () => Promise<unknown>;
+}
+
 describe('HttpActionPlugin Advanced Features', () => {
   let plugin: HttpActionPlugin;
-  let mockFetch: jest.MockedFunction<typeof fetch>;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     plugin = new HttpActionPlugin();
-    mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
-    global.fetch = mockFetch;
+    mockFetch = vi.fn();
+    global.fetch = mockFetch as unknown as typeof fetch;
     
     // Clear cache before each test
     cache.clear();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Caching', () => {
     it('should cache HTTP responses when cacheTtlMs is configured', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ data: 'test' })
+        json: vi.fn().mockResolvedValue({ data: 'test' })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -52,12 +61,12 @@ describe('HttpActionPlugin Advanced Features', () => {
     });
 
     it('should use custom cache key when provided', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ data: 'test' })
+        json: vi.fn().mockResolvedValue({ data: 'test' })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -78,12 +87,12 @@ describe('HttpActionPlugin Advanced Features', () => {
 
   describe('Response Validation', () => {
     it('should validate response status code', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ data: 'test' })
+        json: vi.fn().mockResolvedValue({ data: 'test' })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -101,12 +110,13 @@ describe('HttpActionPlugin Advanced Features', () => {
     });
 
     it('should throw error when status code validation fails', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: false,
         status: 404,
-        statusText: 'Not Found'
+        statusText: 'Not Found',
+        json: vi.fn()
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -123,15 +133,15 @@ describe('HttpActionPlugin Advanced Features', () => {
     });
 
     it('should validate response schema', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ 
+        json: vi.fn().mockResolvedValue({ 
           status: 'verified',
           code: 'ABC123'
         })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/verify',
@@ -155,15 +165,15 @@ describe('HttpActionPlugin Advanced Features', () => {
 
   describe('Result Mapping', () => {
     it('should map response data to context using mapResult', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ 
+        json: vi.fn().mockResolvedValue({ 
           status: 'verified',
           code: 'ABC123'
         })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/verify',
@@ -190,17 +200,17 @@ describe('HttpActionPlugin Advanced Features', () => {
 
   describe('Retry Logic', () => {
     it('should retry failed requests with exponential backoff', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ data: 'success' })
+        json: vi.fn().mockResolvedValue({ data: 'success' })
       };
 
       // First two calls fail, third succeeds
       mockFetch
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(mockResponse as any);
+        .mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -221,12 +231,13 @@ describe('HttpActionPlugin Advanced Features', () => {
     });
 
     it('should not retry on 4xx client errors', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: false,
         status: 400,
-        statusText: 'Bad Request'
+        statusText: 'Bad Request',
+        json: vi.fn()
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/test',
@@ -247,16 +258,16 @@ describe('HttpActionPlugin Advanced Features', () => {
 
   describe('Combined Features', () => {
     it('should work with caching, validation, mapping, and retry together', async () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         ok: true,
         status: 200,
-        json: jest.fn().mockResolvedValue({ 
+        json: vi.fn().mockResolvedValue({ 
           status: 'verified',
           code: 'ABC123',
           userId: 123
         })
       };
-      mockFetch.mockResolvedValueOnce(mockResponse as any);
+      mockFetch.mockResolvedValueOnce(mockResponse);
 
       const config = {
         endpoint: '/api/verify',
