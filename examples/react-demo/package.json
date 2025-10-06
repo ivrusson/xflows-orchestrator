@@ -18,6 +18,7 @@
     "@xflows/core": "workspace:*",
     "@xflows/plugin-http": "workspace:*",
     "@xflows/plugin-react": "workspace:*",
+    "@xflows/plugins": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "xstate": "^5.0.0"
