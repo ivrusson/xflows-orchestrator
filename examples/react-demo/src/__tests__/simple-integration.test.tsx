@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { FlowOrchestrator } from '@xflows/core';
 import FlowDemo from '../components/FlowDemo';
@@ -69,7 +69,7 @@ describe('React Demo Integration Tests', () => {
     });
 
     it('should have valid steps', () => {
-      demoFlow.steps.forEach((step, index) => {
+      demoFlow.steps.forEach((step, _index) => {
         expect(step.id).toBeDefined();
         expect(step.name).toBeDefined();
         expect(step.view).toBeDefined();
@@ -78,7 +78,7 @@ describe('React Demo Integration Tests', () => {
     });
 
     it('should have valid navigation', () => {
-      demoFlow.steps.forEach((step) => {
+      demoFlow.steps.forEach((step, _index) => {
         if (step.navigation) {
           expect(step.navigation).toBeDefined();
           // Navigation can be empty for final steps
