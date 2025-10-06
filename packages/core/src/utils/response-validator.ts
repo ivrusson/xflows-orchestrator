@@ -4,11 +4,11 @@
 
 export interface ExpectConfig {
   status?: number | number[];
-  schema?: string;
   contentType?: string;
+  isError?: (response: Response, data: unknown) => boolean;
 }
 
-export interface ValidationResult {
+export interface ResponseValidationResult {
   valid: boolean;
   errors: string[];
 }
@@ -17,7 +17,7 @@ export class ResponseValidator {
   /**
    * Validate HTTP response against expectations
    */
-  validateResponse(response: Response, expect?: ExpectConfig): ValidationResult {
+  validateResponse(response: Response, expect?: ExpectConfig): ResponseValidationResult {
     const errors: string[] = [];
 
     if (!expect) {
@@ -47,49 +47,15 @@ export class ResponseValidator {
   }
 
   /**
-   * Validate response data against schema (basic implementation)
+   * Check if response indicates an error based on custom logic
    */
-  async validateSchema(data: any, schemaName: string): Promise<ValidationResult> {
-    // This is a basic implementation - in a real system you'd use JSON Schema
-    const errors: string[] = [];
-
-    // For now, we'll do basic type checking based on schema name
-    switch (schemaName) {
-      case 'QuickQuoteVerifyResponse':
-        if (!data || typeof data !== 'object') {
-          errors.push('Expected object for QuickQuoteVerifyResponse');
-        } else {
-          if (typeof data.status !== 'string') {
-            errors.push('Expected status field to be string');
-          }
-          if (typeof data.code !== 'string') {
-            errors.push('Expected code field to be string');
-          }
-        }
-        break;
-      
-      case 'UserResponse':
-        if (!data || typeof data !== 'object') {
-          errors.push('Expected object for UserResponse');
-        } else {
-          if (typeof data.id !== 'string' && typeof data.id !== 'number') {
-            errors.push('Expected id field to be string or number');
-          }
-          if (typeof data.name !== 'string') {
-            errors.push('Expected name field to be string');
-          }
-        }
-        break;
-      
-      default:
-        // Unknown schema - just log warning
-        console.warn(`Unknown schema: ${schemaName}`);
+  isError(response: Response, data: unknown, isErrorFn?: (response: Response, data: unknown) => boolean): boolean {
+    if (isErrorFn) {
+      return isErrorFn(response, data);
     }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    };
+    
+    // Default error detection: 4xx and 5xx status codes
+    return response.status >= 400;
   }
 }
 

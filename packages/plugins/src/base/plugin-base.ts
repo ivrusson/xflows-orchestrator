@@ -14,7 +14,8 @@ import type {
   ActionPluginConfig,
   GuardPluginConfig,
   UIComponentPluginConfig,
-  ToolPluginConfig
+  ToolPluginConfig,
+  PluginType
 } from '../types';
 
 export abstract class BasePluginImpl implements BasePlugin {
@@ -22,7 +23,7 @@ export abstract class BasePluginImpl implements BasePlugin {
     public id: string,
     public name: string,
     public version: string,
-    public type: string
+    public type: PluginType
   ) {}
 
   abstract initialize(): Promise<void>;
@@ -30,6 +31,8 @@ export abstract class BasePluginImpl implements BasePlugin {
 }
 
 export abstract class ActorPluginImpl extends BasePluginImpl implements ActorPlugin {
+  public readonly type = 'actor' as const;
+  
   constructor(id: string, name: string, version: string) {
     super(id, name, version, 'actor');
   }
@@ -38,6 +41,8 @@ export abstract class ActorPluginImpl extends BasePluginImpl implements ActorPlu
 }
 
 export abstract class ActionPluginImpl extends BasePluginImpl implements ActionPlugin {
+  public readonly type = 'action' as const;
+  
   constructor(id: string, name: string, version: string) {
     super(id, name, version, 'action');
   }
@@ -50,6 +55,8 @@ export abstract class ActionPluginImpl extends BasePluginImpl implements ActionP
 }
 
 export abstract class GuardPluginImpl extends BasePluginImpl implements GuardPlugin {
+  public readonly type = 'guard' as const;
+  
   constructor(id: string, name: string, version: string) {
     super(id, name, version, 'guard');
   }
@@ -62,6 +69,8 @@ export abstract class GuardPluginImpl extends BasePluginImpl implements GuardPlu
 }
 
 export abstract class UIComponentPluginImpl extends BasePluginImpl implements UIComponentPlugin {
+  public readonly type = 'ui-component' as const;
+  
   constructor(id: string, name: string, version: string) {
     super(id, name, version, 'ui-component');
   }
@@ -73,6 +82,8 @@ export abstract class UIComponentPluginImpl extends BasePluginImpl implements UI
 }
 
 export abstract class ToolPluginImpl extends BasePluginImpl implements ToolPlugin {
+  public readonly type = 'tool' as const;
+  
   constructor(id: string, name: string, version: string) {
     super(id, name, version, 'tool');
   }

@@ -10,7 +10,7 @@ export class ResultMapper {
   /**
    * Map response data to context using JSONPath-like expressions
    */
-  mapResult(data: any, mapConfig: MapResultConfig, context: Record<string, unknown>): void {
+  mapResult(data: unknown, mapConfig: MapResultConfig, context: Record<string, unknown>): void {
     for (const [contextPath, jsonPath] of Object.entries(mapConfig)) {
       const value = this.extractValue(data, jsonPath);
       this.setByPath(context, contextPath, value);
@@ -20,18 +20,18 @@ export class ResultMapper {
   /**
    * Extract value from data using JSONPath-like expression
    */
-  private extractValue(data: any, path: string): any {
+  private extractValue(data: unknown, path: string): unknown {
     if (path === '$') {
       return data;
     }
 
     if (path.startsWith('$.')) {
       const keys = path.substring(2).split('.');
-      let current = data;
+      let current: unknown = data;
       
       for (const key of keys) {
-        if (current && typeof current === 'object' && key in current) {
-          current = current[key];
+        if (current && typeof current === 'object' && current !== null && key in current) {
+          current = (current as Record<string, unknown>)[key];
         } else {
           return undefined;
         }
@@ -43,7 +43,7 @@ export class ResultMapper {
     // Handle array access like $.items[0]
     if (path.includes('[') && path.includes(']')) {
       const [basePath, indexStr] = path.split('[');
-      const index = parseInt(indexStr.replace(']', ''));
+      const index = Number.parseInt(indexStr.replace(']', ''));
       
       const baseValue = this.extractValue(data, basePath);
       if (Array.isArray(baseValue) && index >= 0 && index < baseValue.length) {
@@ -59,19 +59,19 @@ export class ResultMapper {
   /**
    * Set nested property value using dot notation
    */
-  private setByPath(obj: any, path: string, value: any): void {
+  private setByPath(obj: Record<string, unknown>, path: string, value: unknown): void {
     const keys = path.split('.');
     let current = obj;
     
     for (let i = 0; i < keys.length - 1; i++) {
       const key = keys[i];
-      if (!(key in current) || typeof current[key] !== 'object' || current[key] === null) {
-        current[key] = {};
+      if (!(key in current) || typeof (current as Record<string, unknown>)[key] !== 'object' || (current as Record<string, unknown>)[key] === null) {
+        (current as Record<string, unknown>)[key] = {};
       }
-      current = current[key];
+      current = (current as Record<string, unknown>)[key] as Record<string, unknown>;
     }
     
-    current[keys[keys.length - 1]] = value;
+    (current as Record<string, unknown>)[keys[keys.length - 1]] = value;
   }
 }
 

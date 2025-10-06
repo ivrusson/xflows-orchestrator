@@ -3,7 +3,7 @@
  * Main orchestrator for plugin lifecycle management
  */
 
-import type { BasePlugin, PluginConfig, PluginManager, PluginRegistry } from '../types';
+import type { BasePlugin, PluginConfig, PluginManager, PluginRegistry, PluginType } from '../types';
 import { DefaultPluginRegistry } from '../registry/plugin-registry';
 
 export class DefaultPluginManager implements PluginManager {
@@ -60,8 +60,8 @@ export class DefaultPluginManager implements PluginManager {
     return this.registry.get(pluginId);
   }
 
-  getPluginsByType(type: string): BasePlugin[] {
-    return this.registry.getAll(type as any);
+  getPluginsByType(type: PluginType): BasePlugin[] {
+    return this.registry.getAll(type);
   }
 
   private async createPluginInstance(config: PluginConfig): Promise<BasePlugin> {
@@ -70,11 +70,11 @@ export class DefaultPluginManager implements PluginManager {
     throw new Error(`Plugin creation not implemented for '${config.id}'. Plugins must be implemented separately.`);
   }
 
-  private findDependents(pluginId: string): string[] {
+  private findDependents(_pluginId: string): string[] {
     const dependents: string[] = [];
     const allPlugins = this.registry.getAll();
     
-    for (const plugin of allPlugins) {
+    for (const _plugin of allPlugins) {
       // This would check plugin dependencies in real implementation
       // For now, return empty array
     }

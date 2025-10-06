@@ -8,19 +8,19 @@ export interface CacheConfig {
   invalidate?: string[];
 }
 
-export interface CacheEntry {
-  value: any;
+export interface CacheEntry<T = unknown> {
+  value: T;
   timestamp: number;
   ttlMs: number;
 }
 
 export class Cache {
-  private cache = new Map<string, CacheEntry>();
+  private cache = new Map<string, CacheEntry<unknown>>();
 
   /**
    * Generate cache key from config and context
    */
-  generateKey(config: any, context: any, customKey?: string): string {
+  generateKey(config: unknown, context: unknown, customKey?: string): string {
     if (customKey) {
       return customKey;
     }
@@ -34,7 +34,7 @@ export class Cache {
   /**
    * Get value from cache
    */
-  get(key: string): any | null {
+  get<T = unknown>(key: string): T | null {
     const entry = this.cache.get(key);
     
     if (!entry) {
@@ -47,13 +47,13 @@ export class Cache {
       return null;
     }
 
-    return entry.value;
+    return entry.value as T;
   }
 
   /**
    * Set value in cache
    */
-  set(key: string, value: any, ttlMs: number): void {
+  set<T = unknown>(key: string, value: T, ttlMs: number): void {
     this.cache.set(key, {
       value,
       timestamp: Date.now(),

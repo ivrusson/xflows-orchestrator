@@ -29,7 +29,7 @@ export class RetryManager {
       } catch (error) {
         lastError = error as Error;
         
-        if (attempt === retryConfig.max) {
+        if (attempt === retryConfig.max || !this.shouldRetry(lastError)) {
           throw lastError;
         }
 
@@ -45,6 +45,7 @@ export class RetryManager {
       }
     }
 
+    // biome-ignore lint/style/noNonNullAssertion: <explanation>
     throw lastError!;
   }
 
