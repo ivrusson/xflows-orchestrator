@@ -5,7 +5,7 @@ export default defineConfig({
     {
       format: 'esm',
       syntax: ['node 18'],
-      dts: false, // Temporalmente deshabilitado para evitar errores de tipos
+      dts: true,
     },
     {
       format: 'cjs',

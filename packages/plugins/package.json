@@ -4,6 +4,13 @@
   "description": "Plugin system for XFlows framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "rslib build",
     "build:watch": "rslib build --watch",
