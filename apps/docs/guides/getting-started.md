@@ -28,7 +28,7 @@ pnpm build
 pnpm test
 
 # Start the React demo
-pnpm --filter @xflows/react-demo dev
+pnpm --filter react-demo dev
 ```
 
 If everything works, you should see the React demo running! 🎉
@@ -200,7 +200,7 @@ Create a React component to use your flow:
 ```tsx
 // RegistrationFlow.tsx
 import React from 'react';
-import { FlowComponent } from '@xflows/plugin-react';
+import { FlowComponent } from 'plugin-react';
 import registrationFlow from './registration.json';
 
 function RegistrationFlow() {
@@ -226,7 +226,7 @@ export default RegistrationFlow;
 
 ```bash
 # Start the React demo with your flow
-pnpm --filter @xflows/react-demo dev
+pnpm --filter react-demo dev
 ```
 
 Your registration flow should now be running! Navigate through the steps and see how state updates automatically.

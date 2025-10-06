@@ -469,5 +469,5 @@ Diagrams are integrated into the documentation through:
 ---
 
 <p align="center">
-  <strong>Last Updated:</strong> October 2025
+  <strong>Last Updated:</strong> December 2024
 </p>

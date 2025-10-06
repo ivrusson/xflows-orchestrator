@@ -6,15 +6,15 @@ Complete API documentation for XFlows packages and functions.
 
 | Package | Version | Description | Main Exports |
 |---------|---------|-------------|--------------|
-| [`@xflows/core`](#xflows-core) | 1.0.0 | Core flow orchestrator engine | `FlowOrchestrator`, `FlowConfig` |
-| [`@xflows/plugin-react`](#xflows-plugin-react) | 1.0.0 | React integration | `FlowComponent`, `useFlow` |
-| [`@xflows/plugin-http`](#xflows-plugin-http) | 1.0.0 | HTTP plugin | `HttpActionPlugin`, `HttpActorPlugin` |
-| [`@xflows/plugins`](#xflows-plugins) | 1.0.0 | Plugin system | `PluginManager`, `PluginRegistry` |
-| [`@xflows/renderer-core`](#xflows-renderer-core) | 1.0.0 | Renderer contracts | `ViewProps`, `HostRenderer` |
+| [`core`](#core) | 1.0.0 | Core flow orchestrator engine | `FlowOrchestrator`, `FlowConfig` |
+| [`plugin-react`](#plugin-react) | 1.0.0 | React integration | `FlowComponent`, `useFlow` |
+| [`plugin-http`](#plugin-http) | 1.0.0 | HTTP plugin | `HttpActionPlugin`, `HttpActorPlugin` |
+| [`plugins`](#plugins) | 1.0.0 | Plugin system | `PluginManager`, `PluginRegistry` |
+| [`renderer-core`](#renderer-core) | 1.0.0 | Renderer contracts | `ViewProps`, `HostRenderer` |
 
 ---
 
-## @xflows/core
+## core
 
 Core flow orchestrator that converts FlowConfig definitions into XState machines.
 
@@ -48,7 +48,7 @@ class FlowOrchestrator {
 #### Example
 
 ```typescript
-import { FlowOrchestrator } from '@xflows/core';
+import { FlowOrchestrator } from 'core';
 import myFlowConfig from './my-flow.json';
 
 const orchestrator = new FlowOrchestrator();
@@ -259,7 +259,7 @@ interface InvokeConfig {
 
 ---
 
-## @xflows/plugin-react
+## plugin-react
 
 React-specific plugin implementation.
 
@@ -283,8 +283,8 @@ function FlowComponent(props: FlowComponentProps): ReactElement;
 #### Example
 
 ```typescript
-import { FlowComponent } from '@xflows/plugin-react';
-import { FlowConfig } from '@xflows/core';
+import { FlowComponent } from 'plugin-react';
+import { FlowConfig } from 'core';
 
 const flowConfig: FlowConfig = {
   id: 'my-flow',
@@ -325,7 +325,7 @@ function useFlow(flowConfig: FlowConfig): {
 #### Example
 
 ```typescript
-import { useFlow } from '@xflows/plugin-react';
+import { useFlow } from 'plugin-react';
 
 function MyFlowComponent() {
   const { state, send, view, context, isLoading, error } = useFlow(flowConfig);
@@ -346,7 +346,7 @@ function MyFlowComponent() {
 
 ---
 
-## @xflows/plugin-http
+## plugin-http
 
 HTTP plugin for making API calls.
 
@@ -369,7 +369,7 @@ class HttpActionPlugin implements Plugin {
 #### Example
 
 ```typescript
-import { HttpActionPlugin } from '@xflows/plugin-http';
+import { HttpActionPlugin } from 'plugin-http';
 
 const httpPlugin = new HttpActionPlugin();
 
@@ -407,7 +407,7 @@ class HttpActorPlugin implements Plugin {
 
 ---
 
-## @xflows/plugins
+## plugins
 
 Core plugin system.
 
@@ -430,8 +430,8 @@ class PluginManager {
 #### Example
 
 ```typescript
-import { PluginManager } from '@xflows/plugins';
-import { HttpActionPlugin } from '@xflows/plugin-http';
+import { PluginManager } from 'plugins';
+import { HttpActionPlugin } from 'plugin-http';
 
 const pluginManager = new PluginManager();
 pluginManager.register(new HttpActionPlugin());
@@ -458,7 +458,7 @@ class PluginRegistry {
 
 ---
 
-## @xflows/renderer-core
+## renderer-core
 
 Core contracts for renderer implementations.
 

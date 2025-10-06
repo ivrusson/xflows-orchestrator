@@ -47,10 +47,12 @@ Practical examples and tutorials:
 ## 🎯 Key Concepts
 
 - **Semantic Model**: Declarative JSON-based flow definitions
-- **XState Integration**: Automatic translation to XState state machines
+- **XState Integration**: Automatic translation to XState v5 state machines
 - **Plugin System**: Extensible architecture for third-party integrations
 - **Template Engine**: Dynamic content with Mustache-style templates
 - **JSON Logic**: Powerful conditional logic for navigation and validation
+- **React Integration**: Seamless React components and hooks
+- **HTTP Plugin**: Built-in HTTP client for API integrations
 
 ## 📞 Support
 
