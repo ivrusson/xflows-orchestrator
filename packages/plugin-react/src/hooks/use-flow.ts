@@ -18,14 +18,18 @@ export interface UseFlowResult {
   error: Error | null;
 }
 
-export function useFlow(flowConfig: FlowConfig): UseFlowResult {
+export interface UseFlowOptions {
+  enableLogging?: boolean;
+}
+
+export function useFlow(flowConfig: FlowConfig, options?: UseFlowOptions): UseFlowResult {
   // Use useRef to ensure orchestrator is only created once
   const orchestratorRef = useRef<FlowOrchestrator | null>(null);
   const machineRef = useRef<ReturnType<typeof FlowOrchestrator.prototype.orchestrate> | null>(null);
   
   // Only create orchestrator and machine once
   if (!orchestratorRef.current || !machineRef.current) {
-    orchestratorRef.current = new FlowOrchestrator();
+    orchestratorRef.current = new FlowOrchestrator(options?.enableLogging);
     machineRef.current = orchestratorRef.current.orchestrate(flowConfig);
   }
   

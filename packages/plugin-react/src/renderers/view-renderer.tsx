@@ -28,6 +28,16 @@ export interface ViewRendererProps {
 }
 
 export function ViewRenderer({ view, onNext, onBack }: ViewRendererProps) {
+  // Debug logging for view rendering
+  if (process.env.NODE_ENV === 'test') {
+    // biome-ignore lint/suspicious/noConsoleLog: <explanation>
+    console.log('[ViewRenderer] Rendering view:', { 
+      type: view.type, 
+      title: view.title, 
+      message: view.message 
+    });
+  }
+
   switch (view.type) {
     case 'form':
       return <FormRenderer view={view} onNext={onNext} onBack={onBack} />;
@@ -74,8 +84,12 @@ function FormRenderer({ view, onNext, onBack }: {
             type="button"
             key={action.label}
             onClick={() => {
-              if (action.event === 'START_DEMO' || action.event === 'SUBMIT_USER_INFO' || action.event === 'SAVE_PREFERENCES') onNext();
-              if (action.event === 'GO_BACK' || action.event === 'BACK') onBack();
+              if (action.event === 'GO_BACK' || action.event === 'BACK') {
+                onBack();
+              } else {
+                // Handle any other event by calling onNext with the event name
+                onNext(action.event);
+              }
             }}
           >
             {action.label}
@@ -102,13 +116,12 @@ function DisplayRenderer({ view, onNext, onBack }: {
             type="button"
             key={action.label}
             onClick={() => {
-              if (action.event === 'CALL_API') {
-                // Send CALL_API event directly to trigger hooks
+              if (action.event === 'GO_BACK' || action.event === 'BACK') {
+                onBack();
+              } else {
+                // Handle any other event by calling onNext with the event name
                 onNext(action.event);
-              } else if (action.event === 'RESTART_DEMO') {
-                onNext();
               }
-              if (action.event === 'GO_BACK' || action.event === 'BACK') onBack();
             }}
           >
             {action.label}

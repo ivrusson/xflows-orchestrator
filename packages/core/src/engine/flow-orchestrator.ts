@@ -72,31 +72,35 @@ class SilentLogger implements Logger {
   }
 }
 
-// Default console logger (commented out for now)
-// class ConsoleLogger implements Logger {
-//   info(message: string, context?: Record<string, unknown>): void {
-//     // biome-ignore lint/suspicious/noConsoleLog: <explanation>
-//     console.log(`[FlowOrchestrator] ${message}`, context || '');
-//   }
-//   
-//   warn(message: string, context?: Record<string, unknown>): void {
-//     console.warn(`[FlowOrchestrator] ${message}`, context || '');
-//   }
-//   
-//   error(message: string, context?: Record<string, unknown>): void {
-//     console.error(`[FlowOrchestrator] ${message}`, context || '');
-//   }
-//   
-//   debug(message: string, context?: Record<string, unknown>): void {
-//     console.debug(`[FlowOrchestrator] ${message}`, context || '');
-//   }
-// }
+// Console logger for debugging
+class ConsoleLogger implements Logger {
+  info(message: string, context?: Record<string, unknown>): void {
+    // biome-ignore lint/suspicious/noConsoleLog: <explanation>
+    console.log(`[XFlows] INFO: ${message}`, context || '');
+  }
+  
+  warn(message: string, context?: Record<string, unknown>): void {
+    console.warn(`[XFlows] WARN: ${message}`, context || '');
+  }
+  
+  error(message: string, context?: Record<string, unknown>): void {
+    console.error(`[XFlows] ERROR: ${message}`, context || '');
+  }
+  
+  debug(message: string, context?: Record<string, unknown>): void {
+    console.debug(`[XFlows] DEBUG: ${message}`, context || '');
+  }
+}
 
 export class FlowOrchestrator {
   private logger: Logger;
 
-  constructor(logger?: Logger) {
-    this.logger = logger || new SilentLogger();
+  constructor(logger?: Logger | boolean) {
+    if (typeof logger === 'boolean') {
+      this.logger = logger ? new ConsoleLogger() : new SilentLogger();
+    } else {
+      this.logger = logger || new SilentLogger();
+    }
   }
 
   /**
